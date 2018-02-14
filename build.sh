@@ -6,7 +6,7 @@ fi
 if [ $1 = "all" ]; then
     cd ./hardware/xilinx/modules
     if [ -e build.log ]; then
-        mv build.log build.log.bak
+        mv build.log build.bak.log
     fi
     
     files="./*"
@@ -26,6 +26,12 @@ if [ $1 = "all" ]; then
     done
     
     cd ../stream_shell
+    vivado -mode tcl -source build.tcl 2>&1 | tee -a ../../../build.log
+    if ! [ "${PIPESTATUS[0]}" -eq 0 ]; then
+        echo "ERROR: build for stream_shell failed. Exiting..."
+        rm -rf stream_shell_prj
+        exit 1
+    fi
 elif [ $1 = "clean" ]; then
     if [ -e build.log ]; then
         rm build.log
@@ -36,8 +42,22 @@ elif [ $1 = "clean" ]; then
         cd $modulepath
         if [ -e "${modulepath}_prj" ]; then
             rm -rf ${modulepath}_prj
+        fi
+        if [-e "*.log" ]; then
             rm vivado_hls.log
         fi
         cd ..
     done
+
+    cd ../stream_shell
+    rm -rf stream_shell_prj
+    if [ -e "*.log" ]; then
+        rm *.log
+    fi
+    if [ -e "*.jou" ]; then
+        rm *.jou
+    fi
+    if [ -e "*.bak" ]; then
+        rm *.bak
+    fi
 fi
