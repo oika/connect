@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+*.jou
+*.log
+*.swp
+*_prj
+__pycache__
