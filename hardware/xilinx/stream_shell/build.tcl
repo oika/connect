@@ -1,8 +1,8 @@
-create_project stream_shell_prj /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/stream_shell/stream_shell_prj -part xc7a35ticsg324-1L
+create_project stream_shell_prj ./stream_shell_prj -part xc7a35ticsg324-1L
 set_property board_part digilentinc.com:arty:part0:1.1 [current_project]
-add_files -fileset constrs_1 -norecurse /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/resources/boards/arty_a7/eth_ref_clk.xdc
-import_files -fileset constrs_1 /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/resources/boards/arty_a7/eth_ref_clk.xdc
-set_property  ip_repo_paths  {/home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/modules/axis_network_interface/axis_network_interface_prj/solution1/impl/ip /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/modules/axis_timer/axis_timer_prj/solution1/impl/ip /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/modules/data_formatter/data_formatter_prj/solution1/impl/ip /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/modules/data_router/data_router_prj/solution1/impl/ip /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/modules/echo/echo_prj/solution1/impl/ip /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/modules/logic_state/logic_state_prj/solution1/impl/ip /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/modules/task_manager/task_manager_prj/solution1/impl/ip} [current_project]
+add_files -fileset constrs_1 -norecurse ../resources/boards/arty_a7/eth_ref_clk.xdc
+import_files -fileset constrs_1 ../resources/boards/arty_a7/eth_ref_clk.xdc
+set_property  ip_repo_paths  {../modules/axis_network_interface/axis_network_interface_prj/solution1/impl/ip ../modules/axis_timer/axis_timer_prj/solution1/impl/ip ../modules/data_formatter/data_formatter_prj/solution1/impl/ip ../modules/data_router/data_router_prj/solution1/impl/ip ../modules/echo/echo_prj/solution1/impl/ip ../modules/logic_state/logic_state_prj/solution1/impl/ip ../modules/task_manager/task_manager_prj/solution1/impl/ip} [current_project]
 update_ip_catalog
 create_bd_design "design_1"
 update_compile_order -fileset sources_1
@@ -195,8 +195,8 @@ include_bd_addr_seg [get_bd_addr_segs -excluded axis_network_interface_0/Data_m_
 set_property offset 0x00000000 [get_bd_addr_segs {axis_network_interface_0/Data_m_axi_base_V/SEG_axi_ethernetlite_0_Reg}]
 set_property range 8K [get_bd_addr_segs {axis_network_interface_0/Data_m_axi_base_V/SEG_axi_ethernetlite_0_Reg}]
 validate_bd_design
-make_wrapper -files [get_files /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.srcs/sources_1/bd/design_1/design_1.bd] -top
-add_files -norecurse /home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
+make_wrapper -files [get_files ./stream_shell_prj/stream_shell_prj.srcs/sources_1/bd/design_1/design_1.bd] -top
+add_files -norecurse ./stream_shell_prj/stream_shell_prj.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
 launch_runs impl_1 -to_step write_bitstream -jobs 4
 wait_on_run impl_1
 open_hw
@@ -206,7 +206,7 @@ current_hw_device [get_hw_devices xc7a35t_0]
 refresh_hw_device -update_hw_probes false [lindex [get_hw_devices xc7a35t_0] 0]
 set_property PROBES.FILE {} [get_hw_devices xc7a35t_0]
 set_property FULL_PROBES.FILE {} [get_hw_devices xc7a35t_0]
-set_property PROGRAM.FILE {/home/efukuda/Projects/chiptiptech/connect/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.runs/impl_1/design_1_wrapper.bit} [get_hw_devices xc7a35t_0]
+set_property PROGRAM.FILE {./stream_shell_prj/stream_shell_prj.runs/impl_1/design_1_wrapper.bit} [get_hw_devices xc7a35t_0]
 program_hw_devices [get_hw_devices xc7a35t_0]
 refresh_hw_device [lindex [get_hw_devices xc7a35t_0] 0]
 exit
