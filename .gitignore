@@ -36,3 +36,4 @@
 *.swp
 *_prj
 __pycache__
+.Xil

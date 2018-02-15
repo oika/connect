@@ -1,12 +1,12 @@
 #include "connect_platform.hpp"
-#include "data_formatter.hpp"
+#include "echo_format.hpp"
 
 using namespace hls;
 
-void data_formatter(stream<axiWord>    &rxDataIn,
-                    stream<evWord>     &rxEventOut,
-                    stream<evWord>     &txEventIn,
-                    stream<axiWord>    &txDataOut)
+void echo_format(stream<axiWord>    &rxDataIn,
+                 stream<evWord>     &rxEventOut,
+                 stream<evWord>     &txEventIn,
+                 stream<axiWord>    &txDataOut)
 {
 #pragma HLS DATAFLOW
 #pragma HLS INTERFACE ap_ctrl_none port=return

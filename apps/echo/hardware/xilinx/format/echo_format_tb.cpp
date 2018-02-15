@@ -1,5 +1,5 @@
 #include "connect_platform.hpp"
-#include "data_formatter.hpp"
+#include "echo_format.hpp"
 #include <iostream>
 #include <fstream>
 #include <stdint.h>
@@ -66,7 +66,7 @@ int main() {
 
     // Run module
     for (int i = 0; i < 100; ++i) {
-        data_formatter(rxDataIn, rxEventOut, txEventIn, txDataOut);
+        echo_format(rxDataIn, rxEventOut, txEventIn, txDataOut);
     }
 
     // Check output streams
