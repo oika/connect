@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 if ! [ $# -eq 1 ]; then
     echo "Use \"all\" or \"clean\""
     exit 1
@@ -43,7 +45,7 @@ elif [ $1 = "clean" ]; then
         if [ -e "${modulepath}_prj" ]; then
             rm -rf ${modulepath}_prj
         fi
-        if [-e "*.log" ]; then
+        if [ -e "*.log" ]; then
             rm vivado_hls.log
         fi
         cd ..
