@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 shell_prj="../../platform/hardware/xilinx/stream_shell/stream_shell_prj"
-app="echo"
+app="sha256"
 
 if ! [ -e $shell_prj ]; then
     echo "ERROR: Build the shell first. Exiting..."
