@@ -7,8 +7,6 @@ startgroup
 create_bd_cell -type ip -vlnv xilinx.com:hls:echo:1.0 echo_0
 create_bd_cell -type ip -vlnv xilinx.com:hls:echo_format:1.0 echo_format_0
 endgroup
-set_property location {10 3370 -141} [get_bd_cells echo_0]
-set_property location {10 3539 57} [get_bd_cells echo_format_0]
 connect_bd_intf_net [get_bd_intf_pins echo_format_0/rxEventOut_V_field0_V] [get_bd_intf_pins axis_register_slice_format2logic/S_AXIS]
 undo
 connect_bd_intf_net [get_bd_intf_pins echo_format_0/rxEventOut_V_field0_V] [get_bd_intf_pins axis_register_slice_format2logic/S_AXIS]
@@ -17,9 +15,7 @@ connect_bd_intf_net [get_bd_intf_pins echo_0/resultOut_V_V] [get_bd_intf_pins ax
 connect_bd_intf_net [get_bd_intf_pins axis_register_slice_logic2format/M_AXIS] [get_bd_intf_pins echo_format_0/txEventIn_V_field0_V]
 connect_bd_intf_net [get_bd_intf_pins axis_register_slice_rx/M_AXIS] [get_bd_intf_pins echo_format_0/rxDataIn]
 connect_bd_intf_net [get_bd_intf_pins axis_register_slice_prepare_start/M_AXIS] [get_bd_intf_pins echo_0/prepare_start_V_V]
-set_property location {5 1798 203} [get_bd_cells echo_0]
 connect_bd_intf_net [get_bd_intf_pins echo_0/prepare_done_V_V] [get_bd_intf_pins axis_register_slice_prepare_done/S_AXIS]
-set_property location {5 1711 996} [get_bd_cells echo_format_0]
 connect_bd_intf_net [get_bd_intf_pins echo_format_0/txDataOut] [get_bd_intf_pins axis_register_slice_tx/S_AXIS]
 startgroup
 apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins axis_register_slice_logic2format/aclk]
@@ -30,14 +26,14 @@ make_wrapper -files [get_files ../../../../platform/hardware/xilinx/stream_shell
 add_files -norecurse ../../../../platform/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
 launch_runs impl_1 -to_step write_bitstream -jobs 4
 wait_on_run impl_1
-open_hw
-connect_hw_server
-open_hw_target
-current_hw_device [get_hw_devices xc7a35t_0]
-refresh_hw_device -update_hw_probes false [lindex [get_hw_devices xc7a35t_0] 0]
-set_property PROBES.FILE {} [get_hw_devices xc7a35t_0]
-set_property FULL_PROBES.FILE {} [get_hw_devices xc7a35t_0]
-set_property PROGRAM.FILE {../../../../platform/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.runs/impl_1/design_1_wrapper.bit} [get_hw_devices xc7a35t_0]
-program_hw_devices [get_hw_devices xc7a35t_0]
-refresh_hw_device [lindex [get_hw_devices xc7a35t_0] 0]
+#open_hw
+#connect_hw_server
+#open_hw_target
+#current_hw_device [get_hw_devices xc7a35t_0]
+#refresh_hw_device -update_hw_probes false [lindex [get_hw_devices xc7a35t_0] 0]
+#set_property PROBES.FILE {} [get_hw_devices xc7a35t_0]
+#set_property FULL_PROBES.FILE {} [get_hw_devices xc7a35t_0]
+#set_property PROGRAM.FILE {../../../../platform/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.runs/impl_1/design_1_wrapper.bit} [get_hw_devices xc7a35t_0]
+#program_hw_devices [get_hw_devices xc7a35t_0]
+#refresh_hw_device [lindex [get_hw_devices xc7a35t_0] 0]
 exit

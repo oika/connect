@@ -37,3 +37,4 @@
 *_prj
 __pycache__
 .Xil
+*.bit
