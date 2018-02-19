@@ -16,7 +16,7 @@ struct window_result {
     ap_uint<28> count;
 };
 
-void window_aggregation(hls::stream<ap_uint<64> >            &eventIn,
-                        hls::stream<ap_uint<64> >            &resultOut,
-                        hls::stream<ap_uint<CMD_WIDTH> >     &commandIn,
-                        hls::stream<ap_uint<STATE_WIDTH> >   &stateOut);
+void window_aggregation(hls::stream<ap_uint<64> >   &eventIn,
+                        hls::stream<ap_uint<64> >   &resultOut,
+                        hls::stream<ap_uint<1> >    &prepare_start,
+                        hls::stream<ap_uint<1> >    &prepare_done);
