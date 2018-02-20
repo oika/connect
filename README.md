@@ -28,6 +28,12 @@ Change the MAC address (`tx_eth_dst_addr`) on line 74 in file
 ```
 to your computer's MAC address.
 
+### ARP FPGA's MAC address
+Associate the IP address and the MAC address of the FPGA.
+```
+$ sudo arp -i <eth interface on your computer> -s 192.168.1.10 00:00:5e:00:fa:ce
+```
+
 ### Build FPGA shell
 ```
 $ cd <connect_dir>/platform
