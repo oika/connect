@@ -14,9 +14,11 @@ Here, we will walk you through the process of building a simple cluster that con
 * Ethernet cable connecting the computer and the FPGA board
   * IP address for the ethernet port on the computer should be set to 192.168.1.30
 
-### Clone the repository
+### Clone the repository and set environment variables
 ```
 $ git clone https://github.com/chiptiptech/connect.git
+$ export MYSTR_HOME:<connect_dir>/platform/software
+$ export PYTHONPATH=$MYSTR_HOME/lib/
 ```
 
 ### Set your computer's MAC address in the shell
