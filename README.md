@@ -17,7 +17,7 @@ Here, we will walk you through the process of building a simple cluster that con
 ### Clone the repository and set environment variables
 ```
 $ git clone https://github.com/chiptiptech/connect.git
-$ export MYSTR_HOME:<connect_dir>/platform/software
+$ export MYSTR_HOME=<connect_dir>/platform/software
 $ export PYTHONPATH=$MYSTR_HOME/lib/
 ```
 
