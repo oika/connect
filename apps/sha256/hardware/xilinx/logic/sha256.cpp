@@ -95,7 +95,6 @@ void sha256(stream<ap_uint<1024> >  &eventIn,
             stream<ap_uint<32> >    &resultOut,
             stream<ap_uint<1> >     &prepare_start,
             stream<ap_uint<1> >     &prepare_done)
-            //ap_uint<256>            &final_hash)
 {
 #pragma HLS DATAFLOW
 #pragma HLS INTERFACE ap_ctrl_none port=return
@@ -129,16 +128,10 @@ void sha256(stream<ap_uint<1024> >  &eventIn,
         }
     } else if (!searching && !eventIn.empty()) {
         header = eventIn.read();
-        //cout << hex << header << endl;
         ap_uint<32> nbits = header.range(447, 416);
-        //cout << hex << nbits << endl;
         ap_uint<256> significand = (ap_uint<256>)nbits.range(23, 0);
-        //cout << "significand: " << hex << significand << endl;
         ap_uint<8> exponent = nbits.range(31, 24) - 3;
-        //cout << "exponent: " << dec << exponent << endl;
-        //threshold = (ap_uint<256>)nbits.range(23, 0) << (8 * (nbits.range(31, 24) - 3));
         threshold = significand << (8 * exponent);
-        //cout << "threshold: " << hex << threshold << endl;
         searching = 1;
     }
 

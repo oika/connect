@@ -64,7 +64,7 @@ void axis_network_interface(ap_uint<8>              *base,
 #pragma HLS INTERFACE ap_ctrl_none port=return
 
     static ap_uint<1> init = 0;
-    static enum TxState {TX_INIT = 0, TX_FIRST, TX_REST, TX_WRITE} txState;
+    static enum TxState {TX_INIT = 0, WAIT_MAC, TX_FIRST, TX_REST, TX_WRITE} txState;
     static enum RxState {RX_READ = 0, RX_FIRST, RX_REST} rxState;
 
     // variables for tx
@@ -73,7 +73,7 @@ void axis_network_interface(ap_uint<8>              *base,
     //static ap_uint<48> tx_eth_dst_addr  = 0xb827eb429b19; //raspi
     static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500be02;
     //static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500b81b;
-    static ap_uint<48> tx_eth_src_addr  = 0x00005e00face;
+    static ap_uint<48> tx_eth_src_addr  = 0x01005e00face;
     static ap_uint<16> tx_eth_type      = 0x0800;
     static ap_uint<8>  tx_ip_ver_ihl    = 0x45;
     static ap_uint<8>  tx_ip_type       = 0x0;
@@ -91,6 +91,7 @@ void axis_network_interface(ap_uint<8>              *base,
     static ap_uint<16> tx_udp_checksum  = 0x0;
     static ap_uint<64> tx_udp_payload;
     static ap_uint<6>  intr_cnt         = 0;
+    static ap_uint<16>  wait_count = 0;
 
     // variables for rx
     static ap_uint<8>  rx_ping_buf[0x800];
@@ -122,7 +123,7 @@ void axis_network_interface(ap_uint<8>              *base,
 
     /* TX */
     switch (txState) {
-        case TX_INIT:
+        case TX_INIT: {
             for (int i = 0; i < 6; ++i) {
             #pragma HLS PIPELINE
                 tx_ping_buf[ETH_DST_ADDR_OFFSET + i] = tx_eth_dst_addr.range(47 - 8 * i, 40 - 8 * i);
@@ -151,8 +152,29 @@ void axis_network_interface(ap_uint<8>              *base,
             #pragma HLS PIPELINE
                 tx_ping_buf[UDP_CHECKSUM_OFFSET + i] = tx_udp_checksum.range(15 - 8 * i, 8 - 8 * i);
             }
-            txState = TX_FIRST;
+
+            ap_uint<8> tx_ping_ctrl;
+            ap_uint<8> tx_eth_src_addr_array[8];
+            for (int i = 0; i < 6; ++i) {
+                tx_eth_src_addr_array[i] = tx_eth_src_addr.range(47 - 8 * i, 40 - 8 * i);
+            }
+            for (int i = 0; i < 8; ++i) {
+            #pragma HLS PIPELINE
+                base[TX_PING_DATA_OFFSET + i] = tx_eth_src_addr_array[i];
+            }
+            tx_ping_ctrl = (ap_uint<8>)0x3;
+            memcpy(base + TX_PING_CTRL_OFFSET, &tx_ping_ctrl, 1);
+            txState = WAIT_MAC;
             break;
+        }
+        case WAIT_MAC: {
+            ap_uint<8> tx_ping_ctrl;
+            memcpy(&tx_ping_ctrl, base + TX_PING_CTRL_OFFSET, 1);
+            if (tx_ping_ctrl.range(1, 0) == (ap_uint<2>)0) {
+                txState = TX_FIRST;
+            }
+            break;
+                       }
         case TX_FIRST:
             if (!tx_data.empty() && !tx_meta.empty() && !tx_length.empty()) {
                 tx_length.read();
@@ -161,7 +183,6 @@ void axis_network_interface(ap_uint<8>              *base,
                 for (int i = 0; i < 8; ++i) {
                     if (w.keep.bit(i)){
                         tx_ping_buf[tx_data_offset++] = w.data.range(7 + 8 * i, 8 * i);
-                        //tx_ping_buf[tx_data_offset++] = w.data.range(63 - 8 * i, 56 - 8 * i);
                     }
                 }
 
