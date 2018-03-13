@@ -48,8 +48,11 @@ void axis_network_interface(ap_uint<8>              *base,
                             stream<metadata>        &rx_meta,
                             stream<ap_uint<16> >    &port_open_request,
                             stream<ap_uint<1> >     &port_open_reply,
-                            stream<ap_uint<1> >     &cycle_cnt_intr)
+                            stream<ap_uint<1> >     &cycle_cnt_intr,
+                            stream<ap_uint<48> >    &mac_addr,
+                            ap_uint<3>              *txState_out)
 {
+#pragma HLS INTERFACE axis register both port=mac_addr
 #pragma HLS INTERFACE axis register both port=cycle_cnt_intr
 #pragma HLS INTERFACE axis register both port=port_open_reply
 #pragma HLS INTERFACE axis register both port=port_open_request
@@ -64,16 +67,18 @@ void axis_network_interface(ap_uint<8>              *base,
 #pragma HLS INTERFACE ap_ctrl_none port=return
 
     static ap_uint<1> init = 0;
-    static enum TxState {TX_INIT = 0, WAIT_MAC, TX_FIRST, TX_REST, TX_WRITE} txState;
+    static enum TxState {TX_INIT = 0, WAIT_MAC_INPUT, INIT_MAC, WAIT_MAC, TX_FIRST, TX_REST, TX_WRITE} txState;
     static enum RxState {RX_READ = 0, RX_FIRST, RX_REST} rxState;
 
     // variables for tx
     static ap_uint<8>  tx_ping_buf[0x800];
     static ap_uint<16> tx_data_offset   = UDP_PAYLOAD_OFFSET;
     //static ap_uint<48> tx_eth_dst_addr  = 0xb827eb429b19; //raspi
+    //static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500be02;
     static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500be02;
     //static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500b81b;
-    static ap_uint<48> tx_eth_src_addr  = 0x01005e00face;
+    static ap_uint<48> tx_eth_src_addr;
+    //static ap_uint<48> tx_eth_src_addr  = 0x01005e00face;
     static ap_uint<16> tx_eth_type      = 0x0800;
     static ap_uint<8>  tx_ip_ver_ihl    = 0x45;
     static ap_uint<8>  tx_ip_type       = 0x0;
@@ -91,7 +96,6 @@ void axis_network_interface(ap_uint<8>              *base,
     static ap_uint<16> tx_udp_checksum  = 0x0;
     static ap_uint<64> tx_udp_payload;
     static ap_uint<6>  intr_cnt         = 0;
-    static ap_uint<16>  wait_count = 0;
 
     // variables for rx
     static ap_uint<8>  rx_ping_buf[0x800];
@@ -128,10 +132,6 @@ void axis_network_interface(ap_uint<8>              *base,
             #pragma HLS PIPELINE
                 tx_ping_buf[ETH_DST_ADDR_OFFSET + i] = tx_eth_dst_addr.range(47 - 8 * i, 40 - 8 * i);
             }
-            for (int i = 0; i < 6; ++i) {
-            #pragma HLS PIPELINE
-                tx_ping_buf[ETH_SRC_ADDR_OFFSET + i] = tx_eth_src_addr.range(47 - 8 * i, 40 - 8 * i);
-            }
             for (int i = 0; i < 2; ++i) {
             #pragma HLS PIPELINE
                 tx_ping_buf[ETH_TYPE_OFFSET + i] = tx_eth_type.range(15 - 8 * i, 8 - 8 * i);
@@ -152,10 +152,25 @@ void axis_network_interface(ap_uint<8>              *base,
             #pragma HLS PIPELINE
                 tx_ping_buf[UDP_CHECKSUM_OFFSET + i] = tx_udp_checksum.range(15 - 8 * i, 8 - 8 * i);
             }
-
+            txState = WAIT_MAC_INPUT;
+            break;
+        }
+        case WAIT_MAC_INPUT: {
+            if (!mac_addr.empty()) {
+                tx_eth_src_addr = mac_addr.read();
+                txState = INIT_MAC;
+            }
+            break;
+        }
+        case INIT_MAC: {
             ap_uint<8> tx_ping_ctrl;
             ap_uint<8> tx_eth_src_addr_array[8];
             for (int i = 0; i < 6; ++i) {
+            #pragma HLS PIPELINE
+                tx_ping_buf[ETH_SRC_ADDR_OFFSET + i] = tx_eth_src_addr.range(47 - 8 * i, 40 - 8 * i);
+            }
+            for (int i = 0; i < 6; ++i) {
+            #pragma HLS PIPELINE
                 tx_eth_src_addr_array[i] = tx_eth_src_addr.range(47 - 8 * i, 40 - 8 * i);
             }
             for (int i = 0; i < 8; ++i) {
@@ -174,7 +189,7 @@ void axis_network_interface(ap_uint<8>              *base,
                 txState = TX_FIRST;
             }
             break;
-                       }
+        }
         case TX_FIRST:
             if (!tx_data.empty() && !tx_meta.empty() && !tx_length.empty()) {
                 tx_length.read();
@@ -413,4 +428,6 @@ void axis_network_interface(ap_uint<8>              *base,
             }
             break;
     }
+
+    *txState_out = txState;
 }
