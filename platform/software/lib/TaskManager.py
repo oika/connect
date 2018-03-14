@@ -11,12 +11,12 @@ from Stream import TxNetworkStream, RxNetworkStream
 from TaskProcess import TaskProcess
 import multiprocessing
 
+
 class TaskManagerCommandHandler(asyncore.dispatcher):
 
     def __init__(self, sock, task_manager):
         asyncore.dispatcher.__init__(self, sock)
         self.tm = task_manager
-
 
     def handle_read(self):
         data = self.recv(8192)
@@ -58,22 +58,20 @@ class TaskManager(asyncore.dispatcher):
         self.bind((addr, port))
         self.listen(1)
 
-
     def handle_accepted(self, sock, address):
         handler = TaskManagerCommandHandler(sock, self)
-
 
     def __get_task_manager_info(self, name):
         conf = StreamingConf('cluster.yaml')
         manager_addr = conf.get_tm_address(name)
+        manager_mac = conf.get_tm_mac(name)
         manager_port = conf.get_tm_port(name)
         device_type = conf.get_tm_device_type(name)
         slots = conf.get_tm_slots(name)
         data_interfaces = conf.get_tm_data_interfaces(name)
-        info = TaskManagerInfo(name, manager_addr, manager_port,\
+        info = TaskManagerInfo(name, manager_mac, manager_addr, manager_port,\
                                device_type, slots, data_interfaces)
         return info
-
 
     def add_job(self, job_file, job_name, nw_interfaces):
         # read job
@@ -90,7 +88,6 @@ class TaskManager(asyncore.dispatcher):
         dlg = job.get_device_local_group(self.info.name)
         self.__attach_streams(job.df, dlg, nw_interfaces)
 
-
     def __attach_internal_stream(self, pre, suc, df):
         interface = (pre, suc)
         out_if_index = df.interfaces[interface][0]
@@ -100,7 +97,6 @@ class TaskManager(asyncore.dispatcher):
             stream = multiprocessing.Queue()
             suc.in_streams[in_if_index] = stream
         pre.out_streams[out_if_index] = suc.in_streams[in_if_index]
-
 
     def __attach_tx_stream(slef, pre, suc, df, nw_interfaces):
         edge = (pre, suc)
@@ -113,7 +109,6 @@ class TaskManager(asyncore.dispatcher):
             stream.add_dest(dest_address, dest_data_port)
             pre.out_streams[index] = stream
 
-
     def __attach_rx_stream(self, pre, suc, df, nw_interfaces):
         edge = (pre, suc)
         index = df.interfaces[edge][1]
@@ -122,7 +117,6 @@ class TaskManager(asyncore.dispatcher):
             data_port = int(nw_interfaces[(suc.name, index)][1])
             stream = RxNetworkStream(address, data_port)
             suc.in_streams[index] = stream
-
 
     def __attach_streams(self, df, dlg, nw_interfaces):
         for tlg in dlg.tlgs:
@@ -136,13 +130,11 @@ class TaskManager(asyncore.dispatcher):
                     if not dlg.has_operator(pre):
                         self.__attach_rx_stream(pre, op, df, nw_interfaces)
 
-
     def prepare_tasks(self, job_name):
         tlgs = self.jobs[job_name].dlgs[self.info.name].tlgs
         for tlg in tlgs:
             for op in tlg.operators:
                 op.prepare()
-
 
     def run_tasks(self, job_name):
         tlgs = self.jobs[job_name].dlgs[self.info.name].tlgs
@@ -150,7 +142,6 @@ class TaskManager(asyncore.dispatcher):
             process = TaskProcess(tlg)
             self.processes[job_name].append(process)
         self.__start_processes(job_name)
-
 
     def pause_tasks(self, job_name):
         for process in self.processes[job_name]:
@@ -160,7 +151,6 @@ class TaskManager(asyncore.dispatcher):
             for op in process.tlg.operators:
                 op.pause()
         self.processes[job_name].clear()
-
 
     def cancel_tasks(self, job_name):
         for process in self.processes[job_name]:
@@ -172,12 +162,10 @@ class TaskManager(asyncore.dispatcher):
         del(self.jobs[job_name])
         del(self.processes[job_name])
 
-
     def __start_processes(self, job_name):
         for process in self.processes[job_name]:
             process.running = True
             process.start()
-
 
     def __stop_processes(self, job_name):
         for process in self.processes[job_name]:

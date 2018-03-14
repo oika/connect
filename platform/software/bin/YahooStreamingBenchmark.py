@@ -12,7 +12,9 @@ from OperatorInterface import OperatorInterface
 from BaseOperator import BaseOperator
 from BaseFPGAOperator import BaseFPGAOperator
 
+
 class EventGenerator(OperatorInterface, BaseOperator):
+
     def prepare(self):
         self.user_id = uuid.uuid4()
         self.page_id = uuid.uuid4()
@@ -54,6 +56,7 @@ class EventGenerator(OperatorInterface, BaseOperator):
 
 
 class ResultReceiver(OperatorInterface, BaseOperator):
+
     def prepare(self):
         pass
 
@@ -64,6 +67,7 @@ class ResultReceiver(OperatorInterface, BaseOperator):
 
     def cancel(self):
         pass
+
 
 class HardwareWindowing(BaseFPGAOperator):
     pass
@@ -114,6 +118,7 @@ class HardwareWindowing(BaseFPGAOperator):
 #
 #    def cancel(self):
 #        pass
+
 
 class UserJob(JobInterface, BaseJob):
 

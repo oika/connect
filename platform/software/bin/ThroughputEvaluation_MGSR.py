@@ -6,6 +6,7 @@ from JobInterface import JobInterface
 from BaseJob import BaseJob
 import time
 
+
 class Generator(OperatorInterface, BaseOperator):
 
     def __init__(self, name, *args):
@@ -13,14 +14,12 @@ class Generator(OperatorInterface, BaseOperator):
         self.checkpoint = args[0]
         self.logname = args[1]
 
-
     def prepare(self):
         self.count = 0
         f = open('/tmp/' + self.logname, 'w')
         f.close()
         self.old = 0
         self.now = 0
-
 
     def run(self):
         if not self.out_streams[0].full():
@@ -35,7 +34,6 @@ class Generator(OperatorInterface, BaseOperator):
                     f.write(str(self.now) + '\t' + str(self.checkpoint / (self.now - self.old)) + '\n')
                     f.close()
 
-
     def cancel(self):
         pass
 
@@ -47,14 +45,12 @@ class Receiver(OperatorInterface, BaseOperator):
         self.checkpoint = args[0]
         self.logname = args[1]
 
-
     def prepare(self):
         self.count = 0
         f = open('/tmp/' + self.logname, 'w')
         f.close()
         self.old = 0
         self.now = 0
-
 
     def run(self):
         if not self.in_streams[0].empty():
@@ -68,7 +64,6 @@ class Receiver(OperatorInterface, BaseOperator):
                     f = open('/tmp/' + self.logname, 'a')
                     f.write(str(self.now) + '\t' + str(self.checkpoint / (self.now - self.old)) + '\n')
                     f.close()
-
 
     def cancel(self):
         pass

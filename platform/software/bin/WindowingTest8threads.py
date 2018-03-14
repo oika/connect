@@ -20,7 +20,6 @@ class UserJob(JobInterface, BaseJob):
         windowing = HardwareWindowing('windowing', 'windowing.conf')
         #receiver  = ResultReceiver('recv')
 
-
         self.df.add_node(generator0)
         self.df.add_node(generator1)
         self.df.add_node(generator2)

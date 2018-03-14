@@ -48,8 +48,13 @@ void axis_network_interface(ap_uint<8>              *base,
                             stream<metadata>        &rx_meta,
                             stream<ap_uint<16> >    &port_open_request,
                             stream<ap_uint<1> >     &port_open_reply,
-                            stream<ap_uint<1> >     &cycle_cnt_intr)
+                            stream<ap_uint<1> >     &cycle_cnt_intr,
+                            stream<ap_uint<48> >    &self_mac,
+                            stream<ap_uint<48> >    &dest_mac,
+                            ap_uint<2>              *out_state)
 {
+#pragma HLS INTERFACE axis register both port=dest_mac
+#pragma HLS INTERFACE axis register both port=self_mac
 #pragma HLS INTERFACE axis register both port=cycle_cnt_intr
 #pragma HLS INTERFACE axis register both port=port_open_reply
 #pragma HLS INTERFACE axis register both port=port_open_request
@@ -64,16 +69,18 @@ void axis_network_interface(ap_uint<8>              *base,
 #pragma HLS INTERFACE ap_ctrl_none port=return
 
     static ap_uint<1> init = 0;
-    static enum TxState {TX_INIT = 0, WAIT_MAC, TX_FIRST, TX_REST, TX_WRITE} txState;
+    static enum TxState {TX_INIT = 0, WAIT_MAC_INPUT, INIT_MAC, WAIT_MAC, TX_FIRST, TX_REST, TX_WRITE} txState;
     static enum RxState {RX_READ = 0, RX_FIRST, RX_REST} rxState;
 
     // variables for tx
     static ap_uint<8>  tx_ping_buf[0x800];
     static ap_uint<16> tx_data_offset   = UDP_PAYLOAD_OFFSET;
     //static ap_uint<48> tx_eth_dst_addr  = 0xb827eb429b19; //raspi
+    //static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500be02;
     static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500be02;
     //static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500b81b;
-    static ap_uint<48> tx_eth_src_addr  = 0x01005e00face;
+    static ap_uint<48> tx_eth_src_addr;
+    //static ap_uint<48> tx_eth_src_addr  = 0x01005e00face;
     static ap_uint<16> tx_eth_type      = 0x0800;
     static ap_uint<8>  tx_ip_ver_ihl    = 0x45;
     static ap_uint<8>  tx_ip_type       = 0x0;
@@ -91,7 +98,6 @@ void axis_network_interface(ap_uint<8>              *base,
     static ap_uint<16> tx_udp_checksum  = 0x0;
     static ap_uint<64> tx_udp_payload;
     static ap_uint<6>  intr_cnt         = 0;
-    static ap_uint<16>  wait_count = 0;
 
     // variables for rx
     static ap_uint<8>  rx_ping_buf[0x800];
@@ -124,14 +130,6 @@ void axis_network_interface(ap_uint<8>              *base,
     /* TX */
     switch (txState) {
         case TX_INIT: {
-            for (int i = 0; i < 6; ++i) {
-            #pragma HLS PIPELINE
-                tx_ping_buf[ETH_DST_ADDR_OFFSET + i] = tx_eth_dst_addr.range(47 - 8 * i, 40 - 8 * i);
-            }
-            for (int i = 0; i < 6; ++i) {
-            #pragma HLS PIPELINE
-                tx_ping_buf[ETH_SRC_ADDR_OFFSET + i] = tx_eth_src_addr.range(47 - 8 * i, 40 - 8 * i);
-            }
             for (int i = 0; i < 2; ++i) {
             #pragma HLS PIPELINE
                 tx_ping_buf[ETH_TYPE_OFFSET + i] = tx_eth_type.range(15 - 8 * i, 8 - 8 * i);
@@ -152,10 +150,25 @@ void axis_network_interface(ap_uint<8>              *base,
             #pragma HLS PIPELINE
                 tx_ping_buf[UDP_CHECKSUM_OFFSET + i] = tx_udp_checksum.range(15 - 8 * i, 8 - 8 * i);
             }
-
+            txState = WAIT_MAC_INPUT;
+            break;
+        }
+        case WAIT_MAC_INPUT: {
+            if (!self_mac.empty()) {
+                tx_eth_src_addr = self_mac.read();
+                txState = INIT_MAC;
+            }
+            break;
+        }
+        case INIT_MAC: {
             ap_uint<8> tx_ping_ctrl;
             ap_uint<8> tx_eth_src_addr_array[8];
             for (int i = 0; i < 6; ++i) {
+            #pragma HLS PIPELINE
+                tx_ping_buf[ETH_SRC_ADDR_OFFSET + i] = tx_eth_src_addr.range(47 - 8 * i, 40 - 8 * i);
+            }
+            for (int i = 0; i < 6; ++i) {
+            #pragma HLS PIPELINE
                 tx_eth_src_addr_array[i] = tx_eth_src_addr.range(47 - 8 * i, 40 - 8 * i);
             }
             for (int i = 0; i < 8; ++i) {
@@ -174,7 +187,7 @@ void axis_network_interface(ap_uint<8>              *base,
                 txState = TX_FIRST;
             }
             break;
-                       }
+        }
         case TX_FIRST:
             if (!tx_data.empty() && !tx_meta.empty() && !tx_length.empty()) {
                 tx_length.read();
@@ -288,44 +301,52 @@ void axis_network_interface(ap_uint<8>              *base,
     /* RX */
     switch (rxState) {
         case RX_READ:
-            rx_payload_offset = UDP_PAYLOAD_OFFSET;
-            memcpy(&rx_ping_ctrl, base + RX_PING_CTRL_OFFSET, 1);
-            if (rx_ping_ctrl.bit(0) == 1) {
-                //memcpy(rx_ping_buf, base + RX_PING_DATA_OFFSET, UDP_PAYLOAD_OFFSET);
-                for (ap_uint<8> i = 0; i < (ap_uint<8>)UDP_PAYLOAD_OFFSET; ++i) {
+            if (!dest_mac.empty()) {
+                ap_uint<48> dest_mac_addr = dest_mac.read();
+                for (int i = 0; i < 6; ++i) {
                 #pragma HLS PIPELINE
-                    rx_ping_buf[i] = base[RX_PING_DATA_OFFSET + i];
+                    tx_ping_buf[ETH_DST_ADDR_OFFSET + i] = tx_eth_dst_addr.range(47 - 8 * i, 40 - 8 * i);
                 }
-                ap_uint<16> dst_port = (rx_ping_buf[UDP_DST_PORT_OFFSET],
-                                        rx_ping_buf[UDP_DST_PORT_OFFSET + 1]);
-
-                ap_uint<1> open = 0;
-                for (int i = 0; i < 8; i++) {
-                #pragma HLS PIPELINE
-                    if (dst_port == open_port[i]) {
-                        open = 1;
-                        break;
-                    }
-                }
-                if (open) {
-                    ap_uint<16> len = (rx_ping_buf[IP_LEN_OFFSET], rx_ping_buf[IP_LEN_OFFSET + 1]);
-                    rx_payload_len = len - LEN_IP_UDP_HEADER;
-                    for (int i = 0; i < rx_payload_len; ++i) {
+            } else {
+                rx_payload_offset = UDP_PAYLOAD_OFFSET;
+                memcpy(&rx_ping_ctrl, base + RX_PING_CTRL_OFFSET, 1);
+                if (rx_ping_ctrl.bit(0) == 1) {
+                    //memcpy(rx_ping_buf, base + RX_PING_DATA_OFFSET, UDP_PAYLOAD_OFFSET);
+                    for (ap_uint<8> i = 0; i < (ap_uint<8>)UDP_PAYLOAD_OFFSET; ++i) {
                     #pragma HLS PIPELINE
-                        rx_ping_buf[UDP_PAYLOAD_OFFSET + i] = base[RX_PING_DATA_OFFSET + UDP_PAYLOAD_OFFSET + i];
+                        rx_ping_buf[i] = base[RX_PING_DATA_OFFSET + i];
                     }
+                    ap_uint<16> dst_port = (rx_ping_buf[UDP_DST_PORT_OFFSET],
+                            rx_ping_buf[UDP_DST_PORT_OFFSET + 1]);
 
-                    ap_uint<3> padding = rx_payload_len.range(2, 0);
-                    for (ap_uint<3> i = 0; i < padding; ++i) {
+                    ap_uint<1> open = 0;
+                    for (int i = 0; i < 8; i++) {
                     #pragma HLS PIPELINE
-                        rx_ping_buf[UDP_PAYLOAD_OFFSET + rx_payload_len + i] = 0;
+                        if (dst_port == open_port[i]) {
+                            open = 1;
+                            break;
+                        }
+                    }
+                    if (open) {
+                        ap_uint<16> len = (rx_ping_buf[IP_LEN_OFFSET], rx_ping_buf[IP_LEN_OFFSET + 1]);
+                        rx_payload_len = len - LEN_IP_UDP_HEADER;
+                        for (int i = 0; i < rx_payload_len; ++i) {
+                        #pragma HLS PIPELINE
+                            rx_ping_buf[UDP_PAYLOAD_OFFSET + i] = base[RX_PING_DATA_OFFSET + UDP_PAYLOAD_OFFSET + i];
+                        }
+
+                        ap_uint<3> padding = rx_payload_len.range(2, 0);
+                        for (ap_uint<3> i = 0; i < padding; ++i) {
+                        #pragma HLS PIPELINE
+                            rx_ping_buf[UDP_PAYLOAD_OFFSET + rx_payload_len + i] = 0;
+                        }
+
+                        rxState = RX_FIRST;
                     }
 
-                    rxState = RX_FIRST;
+                    rx_ping_ctrl = ((ap_uint<7>)rx_ping_ctrl.range(7, 1), (ap_uint<1>)0);
+                    memcpy(base + RX_PING_CTRL_OFFSET, &rx_ping_ctrl, 1);
                 }
-
-                rx_ping_ctrl = ((ap_uint<7>)rx_ping_ctrl.range(7, 1), (ap_uint<1>)0);
-                memcpy(base + RX_PING_CTRL_OFFSET, &rx_ping_ctrl, 1);
             }
             break;
         case RX_FIRST:
@@ -413,4 +434,6 @@ void axis_network_interface(ap_uint<8>              *base,
             }
             break;
     }
+
+    *out_state = rxState;
 }
