@@ -11,11 +11,14 @@ void data_router(stream<axiWord>                &rxDataIn,
                  stream<ap_uint<16> >           &txLengthOut,
                  stream<ap_uint<CMD_WIDTH> >    &commandOut,
                  stream<nwif_ports>             &portsOut,
-                 stream<bool>                   &commandReplyIn)
+                 stream<bool>                   &commandReplyIn,
+                 stream<ap_uint<48> >           &dest_mac,
+                 ap_uint<3>                     *out_state)
 {
 #pragma HLS INTERFACE ap_ctrl_none port=return
 #pragma HLS DATAFLOW
 
+#pragma HLS INTERFACE axis register both port=dest_mac
 #pragma HLS INTERFACE axis register both port=rxDataIn
 #pragma HLS INTERFACE axis register both port=rxMetadataIn
 #pragma HLS INTERFACE axis register both port=rxDataOut
@@ -33,13 +36,15 @@ void data_router(stream<axiWord>                &rxDataIn,
 
     static const ap_uint<16> tm_port = 5440;
 
-    static enum RxState {MYSTR_RX_FIRST = 0, MYSTR_RX_TM_SECOND, MYSTR_RX_TM_WAIT, MYSTR_RX_LOGIC} rxState;
+    static enum RxState {MYSTR_RX_FIRST = 0, MYSTR_RX_TM_SECOND, MYSTR_RX_TM_THIRD, MYSTR_RX_TM_WAIT, MYSTR_RX_LOGIC} rxState;
     static enum TxState {MYSTR_TX_FIRST = 0, MYSTR_TX} txState;
 
     static ap_uint<16> logic_self_port;
     static ap_uint<16> logic_dest_port;
     static ap_uint<32> self_addr;
     static ap_uint<32> dest_addr;
+    static ap_uint<32> dest_mac_first;
+    static ap_uint<16> dest_mac_second;
     static ap_uint<16> out_len = 0;
     static ap_uint<16> packetLength = 0;
 
@@ -78,6 +83,15 @@ void data_router(stream<axiWord>                &rxDataIn,
             if (!rxDataIn.empty()) {
                 axiWord word = rxDataIn.read();
                 dest_addr = word.data.range(31, 0);
+                dest_mac_first = word.data.range(63, 32);
+                rxState = MYSTR_RX_TM_THIRD;
+            }
+            break;
+        case MYSTR_RX_TM_THIRD:
+            if (!rxDataIn.empty() && !dest_mac.full()) {
+                axiWord word = rxDataIn.read();
+                dest_mac_second = word.data.range(15, 0);
+                dest_mac.write((dest_mac_first, dest_mac_second));
                 rxState = MYSTR_RX_TM_WAIT;
             }
             break;
@@ -116,7 +130,7 @@ void data_router(stream<axiWord>                &rxDataIn,
 
                 ap_uint<4> counter = 0;
                 for (ap_uint<8> i = 0; i < 8; ++i) {
-#pragma HLS UNROLL
+                #pragma HLS UNROLL
                     if (word.keep.bit(i) == 1) {
                         ++counter;
                     }
@@ -138,7 +152,7 @@ void data_router(stream<axiWord>                &rxDataIn,
 
                 ap_uint<4> counter = 0;
                 for (ap_uint<8> i = 0; i < 8; ++i) {
-#pragma HLS UNROLL
+                #pragma HLS UNROLL
                     if (word.keep.bit(i) == 1) {
                         ++counter;
                     }
@@ -152,4 +166,5 @@ void data_router(stream<axiWord>                &rxDataIn,
             }
             break;
     }
+    *out_state = rxState;
 }

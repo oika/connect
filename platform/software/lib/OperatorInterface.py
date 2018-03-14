@@ -2,7 +2,9 @@
 
 from abc import ABCMeta, abstractmethod
 
+
 class OperatorInterface(metaclass=ABCMeta):
+
     @abstractmethod
     def prepare(self):
         pass

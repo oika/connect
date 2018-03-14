@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import struct
 
 from OperatorInterface import OperatorInterface
@@ -37,7 +35,7 @@ class Master(OperatorInterface, BaseOperator):
                                      0x6666666666666666,\
                                      0x7777777777777777,\
                                      0x8888888888888888,\
-                                     0x200000ff00000000,\
+                                     0x2000008000000000,\
                                      0x8000000000000000,\
                                      0x0000000000000000,\
                                      0x0000000000000000,\
@@ -91,17 +89,22 @@ class UserJob(JobInterface, BaseJob):
     def define_dataflow(self):
 
         master = Master('master')
-        worker = Worker('worker')
+        worker0 = Worker('worker0')
+        #worker1 = Worker('worker1')
 
         self.df.add_node(master)
-        self.df.add_node(worker)
+        self.df.add_node(worker0)
+        #self.df.add_node(worker1)
 
-        self.df.add_edge(master, 0, worker, 0)
-        self.df.add_edge(worker, 0, master, 0)
+        self.df.add_edge(master, 0, worker0, 0)
+        self.df.add_edge(worker0, 0, master, 0)
+        #self.df.add_edge(master, 0, worker1, 0)
+        #self.df.add_edge(worker1, 0, master, 0)
 
         th1 = self.create_thread_local_group(master)
-        th2 = self.create_thread_local_group(worker)
+        th2 = self.create_thread_local_group(worker0)
+        #th3 = self.create_thread_local_group(worker1)
 
         self.create_device_local_group('sv0', 'CPU', th1)
         self.create_device_local_group('fpga0', 'FPGA', th2)
-
+        #self.create_device_local_group('fpga1', 'FPGA', th3)

@@ -2,8 +2,9 @@
 
 from abc import ABCMeta, abstractmethod
 
-class JobInterface(metaclass=ABCMeta):
-  @abstractmethod
-  def define_dataflow(self):
-    pass
 
+class JobInterface(metaclass=ABCMeta):
+
+    @abstractmethod
+    def define_dataflow(self):
+        pass

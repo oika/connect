@@ -1,28 +1,38 @@
-home_dir: '/home/MyStreaming'
+#home_dir: '/home/MyStreaming'
 network_event_bundling: 1
 
 job_manager:
-    #address: '192.168.1.20'
     address: '192.168.1.30'
+    mac: '1c:c0:35:00:be:02'
     port: 5430
 
 task_manager:
     'sv0':
-        manager_address: '192.168.1.30'
-        manager_port: 5440
+        address: '192.168.1.30'
+        mac: '1c:c0:35:00:be:02'
+        port: 5440
         device_type: 'CPU'
         slots: 4
         data_interfaces:
             - address: '192.168.1.30'
+              mac: '1c:c0:35:00:be:02'
               port: 5441
             - address: '192.168.1.30'
+              mac: '1c:c0:35:00:be:02'
               port: 5442
-            - address: '192.168.1.30'
-              port: 5443
     'fpga0':
-        manager_address: '192.168.1.10'
-        manager_port: 5440
+        address: '192.168.1.10'
+        mac: '10:00:5e:00:fa:ce'
+        port: 5440
         device_type: 'FPGA'
         data_interfaces:
             - address: '192.168.1.10'
+              mac: '10:00:5e:00:fa:ce'
               port: 5441
+    #'fpga1':
+    #    manager_address: '192.168.1.11'
+    #    manager_port: 5440
+    #    device_type: 'FPGA'
+    #    data_interfaces:
+    #        - address: '192.168.1.11'
+    #          port: 5441

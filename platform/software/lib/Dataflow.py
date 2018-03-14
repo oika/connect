@@ -1,4 +1,7 @@
+# -*- encoding: utf-8 -*-:
+
 import networkx
+
 
 class Dataflow(networkx.DiGraph):
 
