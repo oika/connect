@@ -9,6 +9,7 @@ Here, we will walk you through the process of building a simple cluster that con
 * Any computer with a 100M Ethernet port and the following software installed
   * Python 3.6.3 or higher
   * [Python PyYAML](https://pypi.python.org/pypi/PyYAML) 3.12 or higher
+  * [Python pySerial](https://pypi.python.org/pypi/pyserial) 3.4 or higher
   * [Xilinx Vivado 2017.4](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2017-4.html)
 * [Arty FPGA board](https://reference.digilentinc.com/reference/programmable-logic/arty/start)
 * Ethernet cable connecting the computer and the FPGA board
@@ -31,7 +32,7 @@ to your computer's MAC address.
 ### ARP FPGA's MAC address
 Associate the IP address and the MAC address of the FPGA.
 ```
-$ sudo arp -i <eth interface on your computer> -s 192.168.1.10 00:00:5e:00:fa:ce
+$ sudo arp -i <eth interface on your computer> -s 192.168.1.10 10:00:5e:00:fa:ce
 ```
 
 ### Build FPGA shell
@@ -51,6 +52,19 @@ $ ./build.sh
 ```
 $ cd ./hardware/xilinx
 $ vivado -mode tcl -source program.tcl
+```
+
+### Set FPGA's MAC address
+```
+$ python3
+```
+In Python3's interactive shell,
+```
+>>> import serial
+>>> import struct
+>>> ser = serial.Serial('/dev/ttyUSB1', 115200) # ttyUSB1 might be ttyUSB2 or something else
+>>> mac = struct.pack('<BBBBBB', 0x10, 0x00, 0x5e, 0x00, 0xfa, 0xce)
+>>> ser.write(mac)
 ```
 
 ### Start JobManager and software TaskManager

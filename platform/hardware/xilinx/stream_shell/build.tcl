@@ -2,7 +2,7 @@ create_project stream_shell_prj ./stream_shell_prj -part xc7a35ticsg324-1L
 set_property board_part digilentinc.com:arty:part0:1.1 [current_project]
 add_files -fileset constrs_1 -norecurse ../resources/boards/arty_a7/eth_ref_clk.xdc
 import_files -fileset constrs_1 ../resources/boards/arty_a7/eth_ref_clk.xdc
-set_property  ip_repo_paths  {../modules/axis_network_interface/axis_network_interface_prj/solution1/impl/ip ../modules/axis_timer/axis_timer_prj/solution1/impl/ip ../modules/data_router/data_router_prj/solution1/impl/ip ../modules/logic_state/logic_state_prj/solution1/impl/ip ../modules/task_manager/task_manager_prj/solution1/impl/ip} [current_project]
+set_property  ip_repo_paths  {../modules/axis_network_interface/axis_network_interface_prj/solution1/impl/ip ../modules/axis_timer/axis_timer_prj/solution1/impl/ip ../modules/data_router/data_router_prj/solution1/impl/ip ../modules/logic_state/logic_state_prj/solution1/impl/ip ../modules/task_manager/task_manager_prj/solution1/impl/ip ../modules/mac_uart/mac_uart_prj/solution1/impl/ip} [current_project]
 update_ip_catalog
 create_bd_design "design_1"
 update_compile_order -fileset sources_1
@@ -143,13 +143,48 @@ startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_slice_format2logic
 endgroup
 startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uartlite:2.0 axi_uartlite_0
+apply_board_connection -board_interface "usb_uart" -ip_intf "axi_uartlite_0/UART" -diagram "design_1"
+endgroup
+startgroup
+set_property -dict [list CONFIG.C_BAUDRATE {115200}] [get_bd_cells axi_uartlite_0]
+endgroup
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_0
+endgroup
+set_property -dict [list CONFIG.NUM_SI {1}] [get_bd_cells smartconnect_0]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:hls:mac_uart:1.0 mac_uart_0
+endgroup
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_slice_self_mac
+endgroup
+connect_bd_intf_net [get_bd_intf_pins axi_uartlite_0/S_AXI] [get_bd_intf_pins smartconnect_0/M00_AXI]
+connect_bd_intf_net [get_bd_intf_pins smartconnect_0/S00_AXI] [get_bd_intf_pins mac_uart_0/m_axi_base_V]
+connect_bd_intf_net [get_bd_intf_pins mac_uart_0/mac_addr_V_V] [get_bd_intf_pins axis_register_slice_self_mac/S_AXIS]
+connect_bd_intf_net [get_bd_intf_pins axis_register_slice_self_mac/M_AXIS] [get_bd_intf_pins axis_network_interface_0/self_mac_V_V]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 axis_register_slice_dest_mac
+endgroup
+connect_bd_intf_net [get_bd_intf_pins data_router_0/dest_mac_V_V] [get_bd_intf_pins axis_register_slice_dest_mac/S_AXIS]
+connect_bd_intf_net [get_bd_intf_pins axis_register_slice_dest_mac/M_AXIS] [get_bd_intf_pins axis_network_interface_0/dest_mac_V_V]
+startgroup
 apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins data_router_0/ap_clk]
 apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins task_manager_0/ap_clk]
 apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins axis_timer_0/ap_clk]
 apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins logic_state_0/ap_clk]
+apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins axi_uartlite_0/s_axi_aclk]
+apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins mac_uart_0/ap_clk]
+#apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/clk_wiz_0/clk_out1 (100 MHz)" }  [get_bd_pins axis_register_slice_dest_mac/aclk]
 endgroup
+connect_bd_net [get_bd_pins smartconnect_0/aresetn] [get_bd_pins rst_clk_wiz_0_100M/peripheral_aresetn]
 include_bd_addr_seg [get_bd_addr_segs -excluded axis_network_interface_0/Data_m_axi_base_V/SEG_axi_ethernetlite_0_Reg]
 set_property offset 0x00000000 [get_bd_addr_segs {axis_network_interface_0/Data_m_axi_base_V/SEG_axi_ethernetlite_0_Reg}]
 set_property range 8K [get_bd_addr_segs {axis_network_interface_0/Data_m_axi_base_V/SEG_axi_ethernetlite_0_Reg}]
+assign_bd_address [get_bd_addr_segs {axi_uartlite_0/S_AXI/Reg }]
+include_bd_addr_seg [get_bd_addr_segs -excluded mac_uart_0/Data_m_axi_base_V/SEG_axi_uartlite_0_Reg]
+set_property offset 0x40600000 [get_bd_addr_segs {mac_uart_0/Data_m_axi_base_V/SEG_axi_uartlite_0_Reg}]
+set_property range 4K [get_bd_addr_segs {mac_uart_0/Data_m_axi_base_V/SEG_axi_uartlite_0_Reg}]
+regenerate_bd_layout
 save_bd_design
 exit
