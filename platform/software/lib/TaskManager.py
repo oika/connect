@@ -135,22 +135,18 @@ class TaskManager(asyncore.dispatcher):
         for tlg in tlgs:
             for op in tlg.operators:
                 op.prepare()
-
-    def run_tasks(self, job_name):
-        tlgs = self.jobs[job_name].dlgs[self.info.name].tlgs
-        for tlg in tlgs:
             process = TaskProcess(tlg, multiprocessing.Event())
             self.processes[job_name].append(process)
+            process.start()
+
+    def run_tasks(self, job_name):
         self.__start_processes(job_name)
 
     def pause_tasks(self, job_name):
-        for process in self.processes[job_name]:
-            process.join()
         self.__stop_processes(job_name)
         for process in self.processes[job_name]:
             for op in process.tlg.operators:
                 op.pause()
-        self.processes[job_name].clear()
 
     def cancel_tasks(self, job_name):
         self.__stop_processes(job_name)
@@ -165,10 +161,8 @@ class TaskManager(asyncore.dispatcher):
 
     def __start_processes(self, job_name):
         for process in self.processes[job_name]:
-            process.running = True
-            process.start()
+            process.running.set()
 
     def __stop_processes(self, job_name):
         for process in self.processes[job_name]:
-            process.ev_stop.set()
-        time.sleep(1)
+            process.running.clear()

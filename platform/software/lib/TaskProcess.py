@@ -6,14 +6,13 @@ import multiprocessing
 
 class TaskProcess(multiprocessing.Process):
 
-    def __init__(self, tlg, ev_stop):
+    def __init__(self, tlg, running):
         super().__init__()
         self.tlg = tlg
-        self.ev_stop = ev_stop
+        self.running = running
 
     def run(self):
         while True:
-            if self.ev_stop.is_set():
-                break
+            self.running.wait()
             for op in self.tlg.operators:
                 op.run()
