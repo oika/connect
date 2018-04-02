@@ -135,39 +135,34 @@ class TaskManager(asyncore.dispatcher):
         for tlg in tlgs:
             for op in tlg.operators:
                 op.prepare()
+            process = TaskProcess(tlg, multiprocessing.Event())
+            self.processes[job_name].append(process)
+            process.start()
 
     def run_tasks(self, job_name):
-        tlgs = self.jobs[job_name].dlgs[self.info.name].tlgs
-        for tlg in tlgs:
-            process = TaskProcess(tlg)
-            self.processes[job_name].append(process)
         self.__start_processes(job_name)
 
     def pause_tasks(self, job_name):
-        for process in self.processes[job_name]:
-            process.join()
         self.__stop_processes(job_name)
         for process in self.processes[job_name]:
             for op in process.tlg.operators:
                 op.pause()
-        self.processes[job_name].clear()
 
     def cancel_tasks(self, job_name):
-        for process in self.processes[job_name]:
-            process.join()
         self.__stop_processes(job_name)
         for process in self.processes[job_name]:
             for op in process.tlg.operators:
                 op.cancel()
+            process.terminate()
+        for process in self.processes[job_name]:
+            process.join()
         del(self.jobs[job_name])
         del(self.processes[job_name])
 
     def __start_processes(self, job_name):
         for process in self.processes[job_name]:
-            process.running = True
-            process.start()
+            process.running.set()
 
     def __stop_processes(self, job_name):
         for process in self.processes[job_name]:
-            process.running = False
-        time.sleep(1)
+            process.running.clear()
