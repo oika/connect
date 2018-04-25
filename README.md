@@ -1,8 +1,8 @@
 # Chiptip Connect
 Chiptip Connect is a distributed computation framework for CPU-FPGA heterogeneous environment.
 In this README, there are two tutorials.
-- [Getting Started with One CPU](# Getting Started with One CPU)
-- [Getting Started with 1 CPU and 1 FPGA](# Getting Started with One CPU)
+- [Getting Started with One CPU](#GettingStartedwithOneCPU)
+- [Getting Started with 1 CPU and 1 FPGA](#GettingStartedwithOneCPU)
 
 ## Getting Started with One CPU
 
