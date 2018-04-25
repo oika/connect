@@ -1,12 +1,78 @@
 # Chiptip Connect
 Chiptip Connect is a distributed computation framework for CPU-FPGA heterogeneous environment.
+In this README, there are two tutorials.
+- [Getting Started with One CPU](# Getting Started with One CPU)
+- [Getting Started with 1 CPU and 1 FPGA](# Getting Started with One CPU)
 
-## Getting Started
+## Getting Started with One CPU
 
-Here, we will walk you through the process of building a simple cluster that consists of one CPU and one FPGA.
+Here, we will walk through the process of running a simple task on your local computer.
 
 ### Requirements
-* Any computer with a 100M Ethernet port and the following software installed
+* Any computer with the following software installed.
+  * Python 3.6.3 or higher
+  * [Python PyYAML](https://pypi.python.org/pypi/PyYAML) 3.12 or higher
+
+### Clone the repository and set environment variables
+```
+$ git clone https://github.com/chiptiptech/connect.git
+$ export MYSTR_HOME=<connect_dir>/platform/software
+$ export PYTHONPATH=$MYSTR_HOME/lib/
+```
+
+### Set your JobManager and TaskManager's IP addresses to your local address.
+
+```
+$ vim <connect_dir>/platform/software/conf/cluster.yaml  # user your favorite editor to edit
+```
+On line 5, 11, 17, and 20, change the IP address to '127.0.0.1'.
+
+You can also change the MAC address to your own one, but it has no effect as long as you are using only CPUs.
+
+Save the change and close the file.
+
+### Start JobManager and software TaskManager
+```
+$ cd <connect_dir>/platform/software/bin
+$ ./JobManager
+```
+
+Open a new console and type the following.
+```
+$ cd <connect_dir>/platform/software/bin
+$ ./TaskManager sv0
+```
+
+### Run app
+Open a new console and type the following.
+```
+$ cd <connect_dir>/platform/software/bin
+$ ./Client submit ThreeOps.py testjob
+$ ./Client prepare testjob
+$ ./Client run testjob
+```
+
+Open a new console and type the following.
+```
+$ tail -f /tmp/1.dat
+$ tail -f /tmp/2.dat
+$ tail -f /tmp/3.dat
+```
+You will see numbers flowing through the screen.
+
+### Finish the app
+```
+$ ./Client pause testjob
+$ ./Client cancel testjob
+```
+Check whether no more lines are added to /tmp/1.dat, 2.dat, or 3.dat.
+
+## Getting Started with 1 CPU and 1 FPGA
+
+Here, we will walk through the process of building a simple cluster that consists of one CPU and one FPGA.
+
+### Requirements
+* Any computer with a 100M Ethernet port and the following software installed.
   * Python 3.6.3 or higher
   * [Python PyYAML](https://pypi.python.org/pypi/PyYAML) 3.12 or higher
   * [Python pySerial](https://pypi.python.org/pypi/pyserial) 3.4 or higher

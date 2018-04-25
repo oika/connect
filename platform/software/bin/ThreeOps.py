@@ -14,7 +14,7 @@ class Operator1(OperatorInterface, BaseOperator):
     def run(self):
         if not self.out_streams[0].full():
             self.out_streams[0].put(1)
-            self.f.write(str(self.out_streams[0]) + '\n')
+            self.f.write(str(1) + '\n')
 
     def pause(self):
         pass
@@ -31,7 +31,7 @@ class Operator2(OperatorInterface, BaseOperator):
     def run(self):
         if not self.out_streams[0].full():
             self.out_streams[0].put(2)
-            self.f.write(str(self.out_streams[0]) + '\n')
+            self.f.write(str(2) + '\n')
 
     def pause(self):
         pass
