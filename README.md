@@ -12,7 +12,7 @@ Here, we will walk through the process of running a simple task on your local co
 * Any computer with the following software installed.
   * Python 3.6.3 or higher
   * [Python PyYAML](https://pypi.python.org/pypi/PyYAML) 3.12 or higher
-  * [networkx](https://networkx.github.io/) 2.0 or higher
+  * [Python networkx](https://networkx.github.io/) 2.0 or higher
 
 
 ### Clone the repository and set environment variables
