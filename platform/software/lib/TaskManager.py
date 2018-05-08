@@ -5,6 +5,7 @@ import importlib
 import time
 import asyncore
 import pickle
+import logging
 from TaskManagerInfo import TaskManagerInfo
 from StreamingConf import StreamingConf
 from Stream import TxNetworkStream, RxNetworkStream
@@ -46,6 +47,8 @@ class TaskManagerCommandHandler(asyncore.dispatcher):
 class TaskManager(asyncore.dispatcher):
 
     def __init__(self, hostname):
+        logging.basicConfig(filename='TaskManager.log', level=logging.DEBUG)
+        self.logger = logging.getLogger(__name__)
         asyncore.dispatcher.__init__(self)
         self.info = self.__get_task_manager_info(hostname)
         self.jobs = {}
@@ -74,6 +77,8 @@ class TaskManager(asyncore.dispatcher):
         return info
 
     def add_job(self, job_file, job_name, nw_interfaces):
+        self.logger.info("Received job file {}.".format(job_file))
+
         # read job
         module_name = job_file.rstrip('.py')
         module = importlib.import_module(module_name)
@@ -88,6 +93,8 @@ class TaskManager(asyncore.dispatcher):
         dlg = job.get_device_local_group(self.info.name)
         self.__attach_streams(job.df, dlg, nw_interfaces)
 
+        self.logger.info("Finished adding job file {}.".format(job_file))
+
     def __attach_internal_stream(self, pre, suc, df):
         interface = (pre, suc)
         out_if_index = df.interfaces[interface][0]
@@ -97,6 +104,8 @@ class TaskManager(asyncore.dispatcher):
             stream = multiprocessing.Queue()
             suc.in_streams[in_if_index] = stream
         pre.out_streams[out_if_index] = suc.in_streams[in_if_index]
+        self.logger.info("Attached {}'s out_stream {} and {}'s in_stream {} internally."\
+                         .format(pre.name, out_if_index, suc.name, in_if_index))
 
     def __attach_tx_stream(slef, pre, suc, df, nw_interfaces):
         edge = (pre, suc)
@@ -108,6 +117,7 @@ class TaskManager(asyncore.dispatcher):
             stream = TxNetworkStream()
             stream.add_dest(dest_address, dest_data_port)
             pre.out_streams[index] = stream
+            self.logger.info("Attached TX stream to {}'s out_stream {}.".format(pre.name, index))
 
     def __attach_rx_stream(self, pre, suc, df, nw_interfaces):
         edge = (pre, suc)
@@ -117,6 +127,7 @@ class TaskManager(asyncore.dispatcher):
             data_port = int(nw_interfaces[(suc.name, index)][1])
             stream = RxNetworkStream(address, data_port)
             suc.in_streams[index] = stream
+            self.logger.info("Attached RX stream to {}'s in_stream {}.".format(suc.name, index))
 
     def __attach_streams(self, df, dlg, nw_interfaces):
         for tlg in dlg.tlgs:
@@ -135,20 +146,24 @@ class TaskManager(asyncore.dispatcher):
         for tlg in tlgs:
             for op in tlg.operators:
                 op.prepare()
+                self.logger.info("Executed {}.prepare().".format(op.name))
             process = TaskProcess(tlg, multiprocessing.Event())
             self.processes[job_name].append(process)
             process.start()
 
     def run_tasks(self, job_name):
+        self.logger.info("Running {}.".format(job_name))
         self.__start_processes(job_name)
 
     def pause_tasks(self, job_name):
+        self.logger.info("Pausing {}.".format(job_name))
         self.__stop_processes(job_name)
         for process in self.processes[job_name]:
             for op in process.tlg.operators:
                 op.pause()
 
     def cancel_tasks(self, job_name):
+        self.logger.info("Cancelling {}.".format(job_name))
         self.__stop_processes(job_name)
         for process in self.processes[job_name]:
             for op in process.tlg.operators:
