@@ -8,6 +8,7 @@ import pickle
 import importlib
 import struct
 import ipaddress
+import logging
 from ClusterInfo import ClusterInfo
 from Commands import Commands
 
@@ -41,6 +42,8 @@ class JobManagerCommandHandler(asyncore.dispatcher):
 class JobManager(asyncore.dispatcher):
 
     def __init__(self):
+        logging.basicConfig(filename='JobManager.log', level=logging.DEBUG)
+        self.logger = logging.getLogger(__name__)
         asyncore.dispatcher.__init__(self)
         self.cluster_info = ClusterInfo()
         self.jobs = {}
@@ -55,6 +58,8 @@ class JobManager(asyncore.dispatcher):
         handler = JobManagerCommandHandler(sock, self)
     
     def add_job(self, job_file, job_name):
+        self.logger.info("Adding job {}:{}.".format(job_file, job_name))
+
         # read job
         global dst_mac
         module_name = job_file.rstrip('.py')
@@ -130,8 +135,11 @@ class JobManager(asyncore.dispatcher):
                                   int(dst_mac_array[4], 16),
                                   int(dst_mac_array[5], 16))
                 self.__send_message(tm_addr, tm_port, message, encoded=True, udp=True)
+
+        self.logger.info("Finished adding job {}:{}.".format(job_file, job_name))
     
     def prepare_job(self, job_name):
+        self.logger.info("Preparing job {}.".format(job_name))
         for dlg in self.jobs[job_name].dlgs.values():
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
@@ -143,6 +151,7 @@ class JobManager(asyncore.dispatcher):
                 self.__send_message(tm_addr, tm_port, message, encoded=True, udp=True)
 
     def run_job(self, job_name):
+        self.logger.info("Running job {}.".format(job_name))
         for dlg in self.jobs[job_name].dlgs.values():
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
@@ -154,6 +163,7 @@ class JobManager(asyncore.dispatcher):
                 self.__send_message(tm_addr, tm_port, message, encoded=True, udp=True)
 
     def pause_job(self, job_name):
+        self.logger.info("Pausing job {}.".format(job_name))
         for dlg in self.jobs[job_name].dlgs.values():
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
@@ -165,6 +175,7 @@ class JobManager(asyncore.dispatcher):
                 self.__send_message(tm_addr, tm_port, message, encoded=True, udp=True)
 
     def cancel_job(self, job_name):
+        self.logger.info("Cancelling job {}.".format(job_name))
         for dlg in self.jobs[job_name].dlgs.values():
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
