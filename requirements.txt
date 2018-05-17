@@ -1,0 +1,4 @@
+decorator==4.3.0
+networkx==2.1
+pyserial==3.4
+PyYAML==3.12
