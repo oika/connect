@@ -49,7 +49,7 @@ $ ./TaskManager sv0
 Open a new console and type the following.
 ```
 $ cd <connect_dir>/platform/software/bin
-$ ./Client submit ThreeOps.py testjob
+$ ./Client submit ThreeOpJob.py testjob
 $ ./Client prepare testjob
 $ ./Client run testjob
 ```
