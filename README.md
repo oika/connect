@@ -13,6 +13,8 @@ Here, we will walk through the process of running a simple task on your local co
   * Python 3.6.3 or higher
   * [Python PyYAML](https://pypi.python.org/pypi/PyYAML) 3.12 or higher
   * [Python networkx](https://networkx.github.io/) 2.0 or higher
+  
+If you are familiar with Docker and wish to use it, use `<connect_dir>/Dockerfile` to set up the environment.
 
 
 ### Clone the repository and set environment variables
