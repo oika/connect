@@ -47,11 +47,15 @@ class JobManager(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         self.cluster_info = ClusterInfo()
         self.jobs = {}
-        address = self.cluster_info.job_manager_info.ip_addr
-        port = self.cluster_info.job_manager_info.port
+
+    def set_network(self):
+        self.address = self.cluster_info.job_manager_info.ip_addr
+        self.port = self.cluster_info.job_manager_info.port
+
+    def start_network(self):
         self.create_socket()
         self.set_reuse_addr()
-        self.bind((address, port))
+        self.bind((self.address, self.port))
         self.listen(1)
     
     def handle_accepted(self, sock, addr):
