@@ -5,4 +5,6 @@ import asyncore
 from JobManager import JobManager
 
 job_manager = JobManager()
+job_manager.set_network()
+job_manager.start_network()
 asyncore.loop()
