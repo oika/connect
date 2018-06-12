@@ -82,7 +82,7 @@ Here, we will walk through the process of building a simple cluster that consist
   * [Python networkx](https://networkx.github.io/) 2.0 or higher
   * [Python pySerial](https://pypi.python.org/pypi/pyserial) 3.4 or higher
   * [Xilinx Vivado 2017.4](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2017-4.html)
-* [Arty FPGA board](https://reference.digilentinc.com/reference/programmable-logic/arty/start)
+* [Arty A7 FPGA board](https://reference.digilentinc.com/reference/programmable-logic/arty-a7/start)
 * Ethernet cable connecting the computer and the FPGA board
   * IP address for the ethernet port on the computer should be set to 192.168.1.30
 
