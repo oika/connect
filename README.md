@@ -14,6 +14,10 @@ Here, we will walk through the process of running a simple task on your local co
   * [Python PyYAML](https://pypi.python.org/pypi/PyYAML) 3.12 or higher
   * [Python networkx](https://networkx.github.io/) 2.0 or higher
   
+You can use the following command to install these Python modules.
+```
+$ pip install -r requirements.txt
+```
 If you are familiar with Docker and wish to use it, use `<connect_dir>/Dockerfile` to set up the environment.
 
 
@@ -85,6 +89,11 @@ Here, we will walk through the process of building a simple cluster that consist
 * [Arty A7 FPGA board](https://reference.digilentinc.com/reference/programmable-logic/arty-a7/start)
 * Ethernet cable connecting the computer and the FPGA board
   * IP address for the ethernet port on the computer should be set to 192.168.1.30
+  
+Python modules PyYAML, networkx, and pySerial can be installed at once using the following command.
+```
+$ pip install -r requirements.txt
+```
 
 ### Clone the repository and set environment variables
 ```
