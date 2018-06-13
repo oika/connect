@@ -1,7 +1,7 @@
 open_project ../../../../platform/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.xpr
 update_compile_order -fileset sources_1
 open_bd_design {../../../../platform/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.srcs/sources_1/bd/design_1/design_1.bd}
-set_property  ip_repo_paths  {../../../../platform/hardware/xilinx/modules/axis_network_interface/axis_network_interface_prj/solution1/impl/ip ./format/echo_format_prj/solution1/impl/ip ./logic/echo_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/axis_timer/axis_timer_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/data_router/data_router_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/logic_state/logic_state_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/task_manager/task_manager_prj/solution1/impl/ip} [current_project]
+set_property  ip_repo_paths  {../../../../platform/hardware/xilinx/modules/axis_network_interface/axis_network_interface_prj/solution1/impl/ip ./format/echo_format_prj/solution1/impl/ip ./logic/echo_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/axis_timer/axis_timer_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/data_router/data_router_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/logic_state/logic_state_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/task_manager/task_manager_prj/solution1/impl/ip ../../../../platform/hardware/xilinx/modules/mac_uart/mac_uart_prj/solution1/impl/ip} [current_project]
 update_ip_catalog
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:hls:echo:1.0 echo_0
