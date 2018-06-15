@@ -54,11 +54,14 @@ class TaskManager(asyncore.dispatcher):
         self.jobs = {}
         self.processes = {}
 
+    def set_network(self):
+        self.addr = self.info.manager_address
+        self.port = self.info.manager_port
+
+    def start_network(self):
         self.create_socket()
         self.set_reuse_addr()
-        addr = self.info.manager_address
-        port = self.info.manager_port
-        self.bind((addr, port))
+        self.bind((self.addr, self.port))
         self.listen(1)
 
     def handle_accepted(self, sock, address):
@@ -99,15 +102,19 @@ class TaskManager(asyncore.dispatcher):
         interface = (pre, suc)
         out_if_index = df.interfaces[interface][0]
         in_if_index  = df.interfaces[interface][1]
-        
-        if not suc.in_streams.get(in_if_index):
-            stream = multiprocessing.Queue()
-            suc.in_streams[in_if_index] = stream
-        pre.out_streams[out_if_index] = suc.in_streams[in_if_index]
-        self.logger.info("Attached {}'s out_stream {} and {}'s in_stream {} internally."\
-                         .format(pre.name, out_if_index, suc.name, in_if_index))
 
-    def __attach_tx_stream(slef, pre, suc, df, nw_interfaces):
+        if not pre.out_streams.get(out_if_index):
+            if not suc.in_streams.get(in_if_index):
+                stream = multiprocessing.Queue()
+                pre.out_streams[out_if_index] = stream
+                suc.in_streams[in_if_index] = stream
+            else:
+                pre.out_streams[out_if_index] = suc.in_streams[in_if_index]
+        else:
+            if not suc.in_streams.get(in_if_index):
+                suc.in_streams[in_if_index] = pre.out_streams[out_if_index]
+        
+    def __attach_tx_stream(self, pre, suc, df, nw_interfaces):
         edge = (pre, suc)
         index = df.interfaces[edge][0]
         dest_index = df.interfaces[edge][1]

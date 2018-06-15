@@ -7,4 +7,6 @@ import asyncore
 from TaskManager import TaskManager
 
 task_manager = TaskManager(sys.argv[1])
+task_manager.set_network()
+task_manager.start_network()
 asyncore.loop()
