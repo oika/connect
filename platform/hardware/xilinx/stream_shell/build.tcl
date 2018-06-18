@@ -7,7 +7,7 @@ update_ip_catalog
 create_bd_design "design_1"
 update_compile_order -fileset sources_1
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:5.4 clk_wiz_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0
 apply_board_connection -board_interface "sys_clock" -ip_intf "clk_wiz_0/clock_CLK_IN1" -diagram "design_1" 
 endgroup
 startgroup
