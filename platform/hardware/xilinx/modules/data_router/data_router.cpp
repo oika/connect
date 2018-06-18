@@ -91,7 +91,7 @@ void data_router(stream<axiWord>                &rxDataIn,
             if (!rxDataIn.empty() && !dest_mac.full()) {
                 axiWord word = rxDataIn.read();
                 dest_mac_second = word.data.range(15, 0);
-                dest_mac.write((dest_mac_first, dest_mac_second));
+                dest_mac.write((dest_mac_second, dest_mac_first));
                 rxState = MYSTR_RX_TM_WAIT;
             }
             break;
