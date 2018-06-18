@@ -12,10 +12,10 @@ class SendOperator(OperatorInterface, BaseOperator):
         self.count = 0
     
     def run(self):
-        if not self.out_streams[0].full():
-            message = struct.pack('<Q', self.count)
-            self.out_streams[0].put(message)
-            self.count += 2
+        #if not self.out_streams[0].full():
+        message = struct.pack('<Q', self.count)
+        self.out_streams[0].put(message)
+        self.count += 2
 
     def pause(self):
         pass
@@ -30,11 +30,11 @@ class IncrementOperator(OperatorInterface, BaseOperator):
         pass
     
     def run(self):
-        if not self.out_streams[0].full():
-            if not self.in_streams[0].empty():
-                event = self.in_streams[0].get()
-                event += 1
-                self.out_streams[0].put(event)
+        #if not self.out_streams[0].full():
+        #    if not self.in_streams[0].empty():
+        event = self.in_streams[0].get()
+        event += 1
+        self.out_streams[0].put(event)
     
     def pause(self):
         pass
@@ -51,11 +51,11 @@ class ReceiveOperator(OperatorInterface, BaseOperator):
         f.close()
     
     def run(self):
-        if not self.in_streams[0].empty():
-            event = struct.unpack('<Q', self.in_streams[0].get())
-            f = open(self.file_name, 'a')
-            f.write(str(event) + '\n')
-            f.close()
+        #if not self.in_streams[0].empty():
+        event = struct.unpack('<Q', self.in_streams[0].get())
+        f = open(self.file_name, 'a')
+        f.write(str(event) + '\n')
+        f.close()
     
     def pause(self):
         pass

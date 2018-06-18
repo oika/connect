@@ -51,7 +51,9 @@ void axis_network_interface(ap_uint<8>              *base,
                             stream<ap_uint<1> >     &cycle_cnt_intr,
                             stream<ap_uint<48> >    &self_mac,
                             stream<ap_uint<48> >    &dest_mac,
-                            ap_uint<2>              *out_state)
+                            ap_uint<3>              *tx_state,
+                            ap_uint<2>              *rx_state,
+                            ap_uint<6>              *intr_cnt_out)
 {
 #pragma HLS INTERFACE axis register both port=dest_mac
 #pragma HLS INTERFACE axis register both port=self_mac
@@ -75,12 +77,8 @@ void axis_network_interface(ap_uint<8>              *base,
     // variables for tx
     static ap_uint<8>  tx_ping_buf[0x800];
     static ap_uint<16> tx_data_offset   = UDP_PAYLOAD_OFFSET;
-    //static ap_uint<48> tx_eth_dst_addr  = 0xb827eb429b19; //raspi
-    //static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500be02;
-    static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500be02;
-    //static ap_uint<48> tx_eth_dst_addr  = 0x1cc03500b81b;
+    static ap_uint<48> tx_eth_dst_addr;
     static ap_uint<48> tx_eth_src_addr;
-    //static ap_uint<48> tx_eth_src_addr  = 0x01005e00face;
     static ap_uint<16> tx_eth_type      = 0x0800;
     static ap_uint<8>  tx_ip_ver_ihl    = 0x45;
     static ap_uint<8>  tx_ip_type       = 0x0;
@@ -112,6 +110,7 @@ void axis_network_interface(ap_uint<8>              *base,
     if (!cycle_cnt_intr.empty()) {
         cycle_cnt_intr.read();
         ++intr_cnt;
+        *intr_cnt_out = intr_cnt;
     }
 
     /* Port open */
@@ -302,10 +301,10 @@ void axis_network_interface(ap_uint<8>              *base,
     switch (rxState) {
         case RX_READ:
             if (!dest_mac.empty()) {
-                ap_uint<48> dest_mac_addr = dest_mac.read();
+                ap_uint<48> tx_eth_dst_addr = dest_mac.read();
                 for (int i = 0; i < 6; ++i) {
                 #pragma HLS PIPELINE
-                    tx_ping_buf[ETH_DST_ADDR_OFFSET + i] = tx_eth_dst_addr.range(47 - 8 * i, 40 - 8 * i);
+                    tx_ping_buf[ETH_DST_ADDR_OFFSET + i] = tx_eth_dst_addr.range(7 + 8 * i, 8 * i);
                 }
             } else {
                 rx_payload_offset = UDP_PAYLOAD_OFFSET;
@@ -435,5 +434,6 @@ void axis_network_interface(ap_uint<8>              *base,
             break;
     }
 
-    *out_state = rxState;
+    *tx_state = txState;
+    *rx_state = rxState;
 }
