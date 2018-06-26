@@ -143,8 +143,18 @@ In Python3's interactive shell,
 >>> import serial
 >>> import struct
 >>> ser = serial.Serial('/dev/ttyUSB1', 115200) # ttyUSB1 might be ttyUSB2 or something else
->>> mac = struct.pack('<BBBBBB', 0x10, 0x00, 0x5e, 0x00, 0xfa, 0xce)
+>>> mac = struct.pack('BBBBBB', 0x10, 0x00, 0x5e, 0x00, 0xfa, 0xce)
 >>> ser.write(mac)
+```
+If you put this in a script, `write()` fails to send the correct MAC address to the FPGA. In such case, you need to wait for a short time after instantiating Serial:
+```
+import serial
+import struct
+import time
+ser = serial.Serial('/dev/ttyUSB1', 115200) # ttyUSB1 might be ttyUSB2 or something else
+time.sleep(0.01)
+mac = struct.pack('BBBBBB', 0x10, 0x00, 0x5e, 0x00, 0xfa, 0xce)
+ser.write(mac)
 ```
 
 ### Start JobManager and software TaskManager
