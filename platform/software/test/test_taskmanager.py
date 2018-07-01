@@ -213,7 +213,7 @@ class TestTaskManager(unittest.TestCase):
         assert ops['1'].out_streams[0] is not ops['2'].out_streams[0]
 
     def test_add_job_inter_device_single_edge_in(self):
-        interfaces = {('2', 0):('127.0.0.0', 5441, '00:00:00:00:00:00')}
+        interfaces = {('2', 0):('127.0.0.1', 5441, '00:00:00:00:00:00')}
         self.tm.add_job('InterDeviceJob_SingleEdge_In.py', self.job_name, interfaces)
         ops = self.__get_ops()
         assert len(ops['2'].in_streams) == 1
@@ -221,8 +221,8 @@ class TestTaskManager(unittest.TestCase):
         del ops['2'].in_streams[0]
 
     def test_add_job_inter_device_single_out_in(self):
-        interfaces = {('2', 0):('127.0.0.0', 5441, '00:00:00:00:00:00'),
-                      ('3', 0):('127.0.0.0', 5442, '00:00:00:00:00:00')}
+        interfaces = {('2', 0):('127.0.0.1', 5441, '00:00:00:00:00:00'),
+                      ('3', 0):('127.0.0.1', 5442, '00:00:00:00:00:00')}
         self.tm.add_job('InterDeviceJob_SingleOut_In.py', self.job_name, interfaces)
         ops = self.__get_ops()
         assert len(ops['2'].in_streams) == 1
@@ -233,8 +233,8 @@ class TestTaskManager(unittest.TestCase):
         del ops['2'].in_streams[0]
 
     def test_add_job_inter_device_double_out_in(self):
-        interfaces = {('2', 0):('127.0.0.0', 5441, '00:00:00:00:00:00'),
-                      ('3', 0):('127.0.0.0', 5442, '00:00:00:00:00:00')}
+        interfaces = {('2', 0):('127.0.0.1', 5441, '00:00:00:00:00:00'),
+                      ('3', 0):('127.0.0.1', 5442, '00:00:00:00:00:00')}
         self.tm.add_job('InterDeviceJob_DoubleOut_In.py', self.job_name, interfaces)
         ops = self.__get_ops()
         assert len(ops['2'].in_streams) == 1
@@ -246,7 +246,7 @@ class TestTaskManager(unittest.TestCase):
         del ops['3'].in_streams[0]
 
     def test_add_job_inter_device_single_in_in(self):
-        interfaces = {('3', 0):('127.0.0.0', 5441, '00:00:00:00:00:00')}
+        interfaces = {('3', 0):('127.0.0.1', 5441, '00:00:00:00:00:00')}
         self.tm.add_job('InterDeviceJob_SingleIn_In.py', self.job_name, interfaces)
         ops = self.__get_ops()
         assert len(ops['3'].in_streams) == 1
@@ -254,8 +254,8 @@ class TestTaskManager(unittest.TestCase):
         del ops['3'].in_streams[0]
 
     def test_add_job_inter_device_double_in_in(self):
-        interfaces = {('3', 0):('127.0.0.0', 5441, '00:00:00:00:00:00'),
-                      ('3', 1):('127.0.0.0', 5442, '00:00:00:00:00:00')}
+        interfaces = {('3', 0):('127.0.0.1', 5441, '00:00:00:00:00:00'),
+                      ('3', 1):('127.0.0.1', 5442, '00:00:00:00:00:00')}
         self.tm.add_job('InterDeviceJob_DoubleIn_In.py', self.job_name, interfaces)
         ops = self.__get_ops()
         assert len(ops['3'].in_streams) == 2
