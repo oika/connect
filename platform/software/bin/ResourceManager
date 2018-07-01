@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 *-*
+
+import os
+import sys
+import time
+import serial
+import subprocess
+from StreamingConf import StreamingConf
+
+class FPGAInfo:
+    
+    def __init__(self, name, serial_id=None, tty=None):
+        self.__name = name
+        self.__serial_id = serial_id
+        self.__tty = tty
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def serial_id(self):
+        return self.__serial_id
+
+    @serial_id.setter
+    def serial_id(self, serial_id):
+        self.__serial_id = serial_id
+
+    @property
+    def tty(self):
+        return self.__tty
+
+    @tty.setter
+    def tty(self, tty):
+        self.__tty = tty
+
+def get_mac(device):
+    conf = StreamingConf('cluster.yaml')
+    mac = int(conf.get_tm_mac(device).replace(':', ''), 16)
+    return mac
+
+def get_serial_id(device):
+    serial_id = 'fake serial id'
+    conf = StreamingConf('cluster.yaml')
+    id_list = conf.get_fpga_serial_ids()
+    return  id_list[device]
+
+def write_bitstream(device, serial_id, bitfile):
+    with open('rm_program.tcl', 'w') as script:
+        with open('template.tcl', 'r') as template:
+            script.write('set serial_id ' + serial_id + '\n')
+            script.write('set bitfile ' + bitfile + '\n')
+            for line in template.readlines():
+                script.write(line)
+    subprocess.call('vivado -mode tcl -source rm_program.tcl', shell=True)
+    subprocess.call('rm rm_program.tcl', shell=True)
+    print('bitstream written')
+
+def get_tty_usb_list(serial_id):
+    tty_list = os.listdir('/dev')
+    usb_list = []
+    for tty in tty_list:
+        if 'USB' in tty:
+            usb_list.append(tty)
+    return usb_list
+
+def get_tty_usb(tty_usb_list, serial_id):
+    for tty in tty_usb_list:
+        try:
+            subprocess.check_output('udevadm info /dev/' + tty + ' | grep ' + serial_id.rstrip('A'), shell=True)
+        except subprocess.CalledProcessError:
+            pass
+        else:
+            return tty
+
+def write_mac_addr(usb_tty, mac_addr):
+    ser = serial.Serial('/dev/' + usb_tty, 115200)
+    time.sleep(0.01)
+    print(hex(mac_addr))
+    mac = mac_addr.to_bytes(6, 'big')
+    print(mac)
+    ser.write(mac)
+    ser.close()
+    
+
+device = sys.argv[1]
+bitfile = sys.argv[2]
+
+print(device)
+print(bitfile)
+
+info = FPGAInfo(device)
+serial_id = get_serial_id(device)
+info.serial_id = serial_id
+print(serial_id)
+
+write_bitstream(device, serial_id, bitfile)
+
+tty_usb_list = get_tty_usb_list(serial_id)
+print(tty_usb_list)
+usb_tty = get_tty_usb(tty_usb_list, serial_id)
+print(usb_tty)
+info.tty = usb_tty
+
+mac = get_mac(device)
+write_mac_addr(info.tty, mac)
