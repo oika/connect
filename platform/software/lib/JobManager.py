@@ -95,7 +95,7 @@ class JobManager:
                 self.__send_message(tm_addr, tm_port, message, encoded=True, udp=True)
 
         self.logger.info("Finished adding job {}:{}.".format(job_file, job_name))
-    
+
     def prepare_job(self, job_name):
         self.logger.info("Preparing job {}.".format(job_name))
         for dlg in self.jobs[job_name].dlgs.values():

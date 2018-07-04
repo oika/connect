@@ -2,11 +2,49 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import asyncore
-
+import pickle
+import logging
+import asyncio
 from TaskManager import TaskManager
 
-task_manager = TaskManager(sys.argv[1])
-task_manager.set_network()
-task_manager.start_network()
-asyncore.loop()
+async def handle_read(reader, writer):
+    data = await reader.read(1024)
+    message = pickle.loads(data)
+    command = message['cmd']
+
+    if command == 'submit':
+        job_file = message['job_file']
+        job_name = message['job_name']
+        nw_interfaces = message['interface']
+        tm.add_job(job_file, job_name, nw_interfaces)
+    elif command == 'prepare':
+        job_name = message['job_name']
+        tm.prepare_tasks(job_name)
+    elif command == 'run':
+        job_name = message['job_name']
+        tm.run_tasks(job_name)
+    elif command == 'pause':
+        job_name = message['job_name']
+        tm.pause_tasks(job_name)
+    elif command == 'cancel':
+        job_name = message['job_name']
+        tm.cancel_tasks(job_name)
+
+logging.basicConfig(filename='TaskManager.log', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+tm = TaskManager(sys.argv[1], logger)
+tm.set_network()
+
+loop = asyncio.get_event_loop()
+coro = asyncio.start_server(handle_read, tm.addr, tm.port, loop=loop)
+server = loop.run_until_complete(coro)
+
+try:
+    loop.run_forever()
+except KeyboardInterrupt:
+    pass
+
+server.close()
+loop.run_until_complete(server.wait_closed())
+loop.close()

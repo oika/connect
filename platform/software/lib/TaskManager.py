@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-import time
-import asyncore
 import pickle
 import logging
 from TaskManagerInfo import TaskManagerInfo
@@ -13,59 +11,27 @@ from TaskProcess import TaskProcess
 import multiprocessing
 
 
-class TaskManagerCommandHandler(asyncore.dispatcher):
+class TaskManager:
 
-    def __init__(self, sock, task_manager):
-        asyncore.dispatcher.__init__(self, sock)
-        self.tm = task_manager
-
-    def handle_read(self):
-        data = self.recv(8192)
-        if data:
-            message = pickle.loads(data)
-            command = message['cmd']
-
-            if command == 'submit':
-                job_file = message['job_file']
-                job_name = message['job_name']
-                nw_interfaces = message['interface']
-                self.tm.add_job(job_file, job_name, nw_interfaces)
-            elif command == 'prepare':
-                job_name = message['job_name']
-                self.tm.prepare_tasks(job_name)
-            elif command == 'run':
-                job_name = message['job_name']
-                self.tm.run_tasks(job_name)
-            elif command == 'pause':
-                job_name = message['job_name']
-                self.tm.pause_tasks(job_name)
-            elif command == 'cancel':
-                job_name = message['job_name']
-                self.tm.cancel_tasks(job_name)
-
-
-class TaskManager(asyncore.dispatcher):
-
-    def __init__(self, hostname):
-        logging.basicConfig(filename='TaskManager.log', level=logging.DEBUG)
-        self.logger = logging.getLogger(__name__)
-        asyncore.dispatcher.__init__(self)
+    def __init__(self, hostname, logger):
+        self.logger = logger
         self.info = self.__get_task_manager_info(hostname)
         self.jobs = {}
         self.processes = {}
+        self.__addr = None
+        self.__port = None
 
     def set_network(self):
-        self.addr = self.info.manager_address
-        self.port = self.info.manager_port
+        self.__addr = self.info.manager_address
+        self.__port = self.info.manager_port
 
-    def start_network(self):
-        self.create_socket()
-        self.set_reuse_addr()
-        self.bind((self.addr, self.port))
-        self.listen(1)
+    @property
+    def addr(self):
+        return self.__addr
 
-    def handle_accepted(self, sock, address):
-        handler = TaskManagerCommandHandler(sock, self)
+    @property
+    def port(self):
+        return self.__port
 
     def __get_task_manager_info(self, name):
         conf = StreamingConf('cluster.yaml')

@@ -9,29 +9,30 @@ from ClusterInfo import ClusterInfo
 
 async def handle_read(reader, writer):
     data = await reader.read(1024)
-    if data:
-        message = pickle.loads(data)
-        command = message['cmd']
-        job_name = message['job_name']
+    message = pickle.loads(data)
+    command = message['cmd']
+    job_name = message['job_name']
 
-        if command == 'submit':
-            job_file = message['job_file']
-            jm.add_job(job_file, job_name)
-        elif command == 'prepare':
-            jm.prepare_job(job_name)
-        elif command == 'run':
-            jm.run_job(job_name)
-        elif command == 'pause':
-            jm.pause_job(job_name)
-        elif command == 'cancel':
-            jm.cancel_job(job_name)
+    if command == 'submit':
+        job_file = message['job_file']
+        jm.add_job(job_file, job_name)
+    elif command == 'prepare':
+        jm.prepare_job(job_name)
+    elif command == 'run':
+        jm.run_job(job_name)
+    elif command == 'pause':
+        jm.pause_job(job_name)
+    elif command == 'cancel':
+        jm.cancel_job(job_name)
 
 logging.basicConfig(filename='JobManager.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 cluster_info = ClusterInfo()
 jm = JobManager(cluster_info, logger)
 jm_addr = cluster_info.job_manager_info.ip_addr
 jm_port = cluster_info.job_manager_info.port
+
 loop = asyncio.get_event_loop()
 coro = asyncio.start_server(handle_read, jm_addr, jm_port, loop=loop)
 server = loop.run_until_complete(coro)
@@ -44,8 +45,3 @@ except KeyboardInterrupt:
 server.close()
 loop.run_until_complete(server.wait_closed())
 loop.close()
-
-#job_manager = JobManager()
-#job_manager.set_network()
-#job_manager.start_network()
-#asyncore.loop()
