@@ -1,66 +1,20 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
-import asyncore
 import socket
 import pickle
 import importlib
 import struct
 import ipaddress
-import logging
-from ClusterInfo import ClusterInfo
 from Commands import Commands
 
 
-class JobManagerCommandHandler(asyncore.dispatcher):
+class JobManager:
 
-    def __init__(self, svr_sock, job_manager):
-        asyncore.dispatcher.__init__(self, sock=svr_sock)
-        self.jm = job_manager
-    
-    def handle_read(self):
-        data = self.recv(8192)
-        if data:
-            message = pickle.loads(data)
-            command = message['cmd']
-            job_name = message['job_name']
-
-            if command == 'submit':
-                job_file = message['job_file']
-                self.jm.add_job(job_file, job_name)
-            elif command == 'prepare':
-                self.jm.prepare_job(job_name)
-            elif command == 'run':
-                self.jm.run_job(job_name)
-            elif command == 'pause':
-                self.jm.pause_job(job_name)
-            elif command == 'cancel':
-                self.jm.cancel_job(job_name)
-
-
-class JobManager(asyncore.dispatcher):
-
-    def __init__(self):
-        logging.basicConfig(filename='JobManager.log', level=logging.DEBUG)
-        self.logger = logging.getLogger(__name__)
-        asyncore.dispatcher.__init__(self)
-        self.cluster_info = ClusterInfo()
+    def __init__(self, cluster_info, logger):
+        self.cluster_info = cluster_info
+        self.logger = logger
         self.jobs = {}
 
-    def set_network(self):
-        self.address = self.cluster_info.job_manager_info.ip_addr
-        self.port = self.cluster_info.job_manager_info.port
-
-    def start_network(self):
-        self.create_socket()
-        self.set_reuse_addr()
-        self.bind((self.address, self.port))
-        self.listen(1)
-    
-    def handle_accepted(self, sock, addr):
-        handler = JobManagerCommandHandler(sock, self)
-    
     def add_job(self, job_file, job_name):
         self.logger.info("Adding job {}:{}.".format(job_file, job_name))
 
@@ -191,8 +145,7 @@ class JobManager(asyncore.dispatcher):
                 self.__send_message(tm_addr, tm_port, message, encoded=True, udp=True)
         del(self.jobs[job_name])
 
-    @staticmethod
-    def __send_message(address, port, message, encoded=False, udp=False):
+    def __send_message(self, address, port, message, encoded=False, udp=False):
         if not encoded:
             message = pickle.dumps(message)
         if udp:
