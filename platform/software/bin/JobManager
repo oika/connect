@@ -9,6 +9,7 @@ from ClusterInfo import ClusterInfo
 
 async def handle_read(reader, writer):
     data = await reader.read(1024)
+    addr = writer.get_extra_info('peername')
     message = pickle.loads(data)
     command = message['cmd']
     job_name = message['job_name']
@@ -16,14 +17,22 @@ async def handle_read(reader, writer):
     if command == 'submit':
         job_file = message['job_file']
         jm.add_job(job_file, job_name)
+        message = 'Job \'' + job_name + '\' submitted'
     elif command == 'prepare':
         jm.prepare_job(job_name)
+        message = 'Preperation for job \'' + job_name + '\' done'
     elif command == 'run':
         jm.run_job(job_name)
+        message = 'Job \'' + job_name + '\' running'
     elif command == 'pause':
         jm.pause_job(job_name)
+        message = 'Job \'' + job_name + '\' pausing'
     elif command == 'cancel':
         jm.cancel_job(job_name)
+        message = 'Job \'' + job_name + '\' canceled'
+
+    writer.write(message.encode())
+    await writer.drain()
 
 logging.basicConfig(filename='JobManager.log', level=logging.DEBUG)
 logger = logging.getLogger(__name__)

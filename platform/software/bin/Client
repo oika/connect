@@ -24,6 +24,11 @@ async def connect_client(argv, jm_addr, jm_port, loop):
     else:
         return
     writer.write(pickle.dumps(message))
+
+    data = await reader.read(1024)
+    message = data.decode()
+    print(message)
+
     writer.close()
 
 conf = StreamingConf('cluster.yaml')
