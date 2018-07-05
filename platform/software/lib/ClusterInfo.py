@@ -3,6 +3,7 @@
 from StreamingConf import StreamingConf
 from JobManagerInfo import JobManagerInfo
 from TaskManagerInfo import TaskManagerInfo
+from ResourceManagerInfo import ResourceManagerInfo
 
 
 class ClusterInfo:
@@ -29,3 +30,6 @@ class ClusterInfo:
         jm_ip = conf.get_jm_address()
         jm_port = conf.get_jm_port()
         self.job_manager_info = JobManagerInfo(jm_mac, jm_ip, jm_port)
+        rm_ip = conf.get_rm_address()
+        rm_port = conf.get_rm_port()
+        self.resource_manager_info = ResourceManagerInfo(rm_ip, rm_port)

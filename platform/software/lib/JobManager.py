@@ -5,6 +5,7 @@ import pickle
 import importlib
 import struct
 import ipaddress
+import asyncio
 from Commands import Commands
 
 
@@ -14,6 +15,8 @@ class JobManager:
         self.cluster_info = cluster_info
         self.logger = logger
         self.jobs = {}
+        self.rm_addr = self.cluster_info.resource_manager_info.manager_address
+        self.rm_port = self.cluster_info.resource_manager_info.manager_port
 
     def add_job(self, job_file, job_name):
         self.logger.info("Adding job {}:{}.".format(job_file, job_name))
@@ -71,6 +74,17 @@ class JobManager:
                 assert len(dlg.tlgs) == 1
                 assert len(dlg.tlgs[0].operators) == 1
                 op = dlg.tlgs[0].operators[0]
+                device = dlg.tm_name
+                bitfile = op.bitfile
+                req = 'wrbit'
+                param = {'device': device, 'bitfile': bitfile}
+                message = {'req': 'program', 'param': param}
+                ret_message = self.__send_and_wait_message(self.rm_addr, self.rm_port, message)
+                if ret_message == 'Success':
+                    self.logger.info("Wrote bitstream {} to {}".format(bitfile, device))
+                else:
+                    # Currently ResourceManager only returns 'Success'
+                    pass
                 logic_in_port = int(nw_interfaces[(op.name, 0)][1])
                 if len(tuple(job.df.successors(op))) > 0:
                     suc = tuple(job.df.successors(op))[0]
@@ -86,7 +100,7 @@ class JobManager:
                 message = struct.pack('<I', Commands.submit) + struct.pack('<H', logic_in_port)\
                     + struct.pack('<H', logic_out_port)\
                     + struct.pack('<I', int(ipaddress.IPv4Address(dst_addr)))\
-                    + struct.pack('<BBBBBB', int(dst_mac_array[0], 16),
+                    + struct.pack('BBBBBB', int(dst_mac_array[0], 16),
                                   int(dst_mac_array[1], 16),
                                   int(dst_mac_array[2], 16),
                                   int(dst_mac_array[3], 16),
@@ -156,3 +170,12 @@ class JobManager:
             client_sock.connect((address, port))
             client_sock.send(message)
             client_sock.close()
+
+    def __send_and_wait_message(self, address, port, message, encoded=False, udp=False):
+        if not encoded:
+            message = pickle.dumps(message)
+        client_sock = socket.socket()
+        client_sock.connect((address, port))
+        client_sock.send(message)
+        message = client_sock.recv(1024).decode()
+        return message

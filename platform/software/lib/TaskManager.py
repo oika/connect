@@ -29,9 +29,17 @@ class TaskManager:
     def addr(self):
         return self.__addr
 
+    @addr.setter
+    def addr(self, addr):
+        self.__addr = addr
+
     @property
     def port(self):
         return self.__port
+
+    @port.setter
+    def port(self, port):
+        self.__port = port
 
     def __get_task_manager_info(self, name):
         conf = StreamingConf('cluster.yaml')
@@ -79,7 +87,7 @@ class TaskManager:
         else:
             if not suc.in_streams.get(in_if_index):
                 suc.in_streams[in_if_index] = pre.out_streams[out_if_index]
-        
+
     def __attach_tx_stream(self, pre, suc, df, nw_interfaces):
         edge = (pre, suc)
         index = df.interfaces[edge][0]
