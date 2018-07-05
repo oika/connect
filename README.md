@@ -31,7 +31,7 @@ $ export PYTHONPATH=$MYSTR_HOME/lib/
 ### Set your JobManager and TaskManager's IP addresses to your local address.
 
 ```
-$ vim <connect_dir>/platform/software/conf/cluster.yaml  # user your favorite editor to edit
+$ vim <connect_dir>/platform/software/conf/cluster.yaml  # use your favorite editor to edit
 ```
 On line 5, 11, 17, and 20, change the IP address to '127.0.0.1'.
 
