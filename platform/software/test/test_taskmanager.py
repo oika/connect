@@ -18,7 +18,6 @@ class TestTaskManager(unittest.TestCase):
         self.job_name = 'tm_test'
 
     def tearDown(self):
-        #self.tm.close()
         del self.tm
 
     def __get_ops(self):
