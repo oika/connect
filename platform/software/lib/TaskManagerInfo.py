@@ -22,9 +22,9 @@ class TaskManagerInfo:
 
     def reserve_data_interface(self):
         for interface in self.data_interfaces:
-            mac_addr = interface.get_mac_addr()
-            ip_addr = interface.get_ip_addr()
-            port = interface.get_port()
-            if interface.available:
+            mac_addr = interface.mac_addr
+            ip_addr = interface.ip_addr
+            port = interface.port
+            if interface.is_available:
                 interface.reserve()
                 return mac_addr, ip_addr, port
