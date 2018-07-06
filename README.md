@@ -85,8 +85,8 @@ Here, we will walk through the process of building a simple cluster that consist
   * [Python PyYAML](https://pypi.python.org/pypi/PyYAML) 3.12 or higher
   * [Python networkx](https://networkx.github.io/) 2.0 or higher
   * [Python pySerial](https://pypi.python.org/pypi/pyserial) 3.4 or higher
-  * [Xilinx Vivado 2017.4](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2017-4.html)
-* [Arty A7 FPGA board](https://reference.digilentinc.com/reference/programmable-logic/arty-a7/start)
+  * [Xilinx Vivado 2018.1](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2018-1.html)
+* [Arty A7-35T FPGA board](https://reference.digilentinc.com/reference/programmable-logic/arty-a7/start)
 * Ethernet cable connecting the computer and the FPGA board
   * IP address for the ethernet port on the computer should be set to 192.168.1.30
   
@@ -102,18 +102,20 @@ $ export MYSTR_HOME=<connect_dir>/platform/software
 $ export PYTHONPATH=$MYSTR_HOME/lib/
 ```
 
-### Set your computer's MAC address in the shell
-Change the MAC address (`tx_eth_dst_addr`) on line 74 in file
-```
-<connect_dir>/platform/hardware/xilinx/modules/axis_network_interface/axis_network_interface.cpp
-```
-to your computer's MAC address.
-
 ### ARP FPGA's MAC address
 Associate the IP address and the MAC address of the FPGA.
 ```
 $ sudo arp -i <eth interface on your computer> -s 192.168.1.10 10:00:5e:00:fa:ce
 ```
+
+### Set information of your cluster in configuration file
+
+Edit `<connect_dir>/platform/software/conf/cluster.yaml` and make the following changes.
+
+- Change `job_manager->mac` to your computer's MAC address.
+- Change `task_manager->'sv0'->mac` to your computer's MAC address.
+- Change `task_manager->'sv0'->data_interfaces->mac` to your computer's MAC address. There are multiple locations for this setting.
+- Change `task_manager->'fpga0'->serial_id` to your FPGA board's ID. The ID can be found on the back of your FPGA board.
 
 ### Build FPGA shell
 ```
@@ -128,49 +130,32 @@ $ cd <connect_dir>/apps/echo
 $ ./build.sh
 ```
 
-### Write bit stream to FPGA
+### Copy bit stream file
 ```
-$ cd ./hardware/xilinx
-$ vivado -mode tcl -source program.tcl
-```
-
-### Set FPGA's MAC address
-```
-$ python3
-```
-In Python3's interactive shell,
-```
->>> import serial
->>> import struct
->>> ser = serial.Serial('/dev/ttyUSB1', 115200) # ttyUSB1 might be ttyUSB2 or something else
->>> mac = struct.pack('BBBBBB', 0x10, 0x00, 0x5e, 0x00, 0xfa, 0xce)
->>> ser.write(mac)
-```
-If you put this in a script, `write()` fails to send the correct MAC address to the FPGA. In such case, you need to wait for a short time after instantiating Serial:
-```
-import serial
-import struct
-import time
-ser = serial.Serial('/dev/ttyUSB1', 115200) # ttyUSB1 might be ttyUSB2 or something else
-time.sleep(0.01)
-mac = struct.pack('BBBBBB', 0x10, 0x00, 0x5e, 0x00, 0xfa, 0xce)
-ser.write(mac)
+$ cp <connect_dir>/platform/hardware/xilinx/stream_shell/stream_shell_prj/stream_shell_prj.runs/impl_1/design_1_wrapper.bit <connect_dir>/platform/software/bin/
 ```
 
-### Start JobManager and software TaskManager
+### Start JobManager, software TaskManager, and ResourceManager
+Start JobManger.
 ```
 $ cd <connect_dir>/platform/software/bin
 $ ./JobManager
 ```
 
-Open a new console and type the following.
+Open a new console and start TaskManager.
 ```
 $ cd <connect_dir>/platform/software/bin
 $ ./TaskManager sv0
 ```
 
+Open a new console and start ResourceManager.
+```
+$ cd <connect_dir>/platform/software/bin
+$ ./ResourceManager
+```
+
 ### Run app
-Open a new console and type the following.
+Open a new console and run the echo app.
 ```
 $ cd <connect_dir>/platform/software/bin
 $ ./Client submit FPGAJob.py testjob
@@ -182,4 +167,11 @@ Open a new console and type the following.
 ```
 $ tail -f /tmp/fpga.out
 ```
-You will see the numbers echoed back from the FPGA in the console. To finish, type ^C in the TaskManager console.
+You will see the numbers echoed back from the FPGA in the console.
+
+### Finish app
+In the Client console:
+```
+$ ./Client pause testjob
+$ ./Client cancel testjob
+```
