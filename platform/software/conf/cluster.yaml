@@ -1,6 +1,10 @@
 #home_dir: '/home/MyStreaming'
 network_event_bundling: 1
 
+resource_manager:
+    address: '192.168.1.30'
+    port: 5420
+
 job_manager:
     address: '192.168.1.30'
     mac: '1c:c0:35:00:be:02'
@@ -29,10 +33,4 @@ task_manager:
             - address: '192.168.1.10'
               mac: '10:00:5e:00:fa:ce'
               port: 5441
-    #'fpga1':
-    #    manager_address: '192.168.1.11'
-    #    manager_port: 5440
-    #    device_type: 'FPGA'
-    #    data_interfaces:
-    #        - address: '192.168.1.11'
-    #          port: 5441
+        serial_id: 'DA43B69'

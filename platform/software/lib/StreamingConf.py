@@ -11,10 +11,7 @@ class StreamingConf:
         f = open(home_dir + '/conf/' + conf_file, 'r')
         self.conf = yaml.load(f)
         f.close()
-    
-    #def get_job_manager(self):
-    #    return self.conf['job_manager']
-    
+
     def get_jm_address(self):
         return self.conf['job_manager']['address']
 
@@ -48,3 +45,17 @@ class StreamingConf:
 
     def get_network_bundling(self):
         return self.conf['network_event_bundling']
+
+    def get_rm_address(self):
+        return self.conf['resource_manager']['address']
+
+    def get_rm_port(self):
+        return self.conf['resource_manager']['port']
+
+    def get_fpga_serial_ids(self):
+        id_dict = {}
+        dev_dict = self.get_task_managers()
+        for dev, info in dev_dict.items():
+            if info['device_type'] == 'FPGA':
+                id_dict[dev] = '210319A' + info['serial_id'].lstrip('DA') + 'A'
+        return id_dict

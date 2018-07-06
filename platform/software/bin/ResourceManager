@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import time
+import serial
+import pickle
+import asyncio
+import subprocess
+from StreamingConf import StreamingConf
+
+class FPGAInfo:
+
+    def __init__(self, name, serial_id=None, tty=None):
+        self.__name = name
+        self.__serial_id = serial_id
+        self.__tty = tty
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def serial_id(self):
+        return self.__serial_id
+
+    @serial_id.setter
+    def serial_id(self, serial_id):
+        self.__serial_id = serial_id
+
+    @property
+    def tty(self):
+        return self.__tty
+
+    @tty.setter
+    def tty(self, tty):
+        self.__tty = tty
+
+class FPGAWriter:
+
+    def __init__(self, conf):
+        self.conf = conf
+
+    def get_mac(self, device):
+        mac = int(self.conf.get_tm_mac(device).replace(':', ''), 16)
+        return mac
+
+    def get_serial_id(self, device):
+        serial_id = 'fake serial id'
+        id_list = self.conf.get_fpga_serial_ids()
+        return  id_list[device]
+
+    def write_bitstream(self, device, serial_id, bitfile):
+        with open('rm_program.tcl', 'w') as script:
+            with open('template.tcl', 'r') as template:
+                script.write('set serial_id ' + serial_id + '\n')
+                script.write('set bitfile ' + bitfile + '\n')
+                for line in template.readlines():
+                    script.write(line)
+        subprocess.call('vivado -mode tcl -source rm_program.tcl', shell=True)
+        subprocess.call('rm rm_program.tcl', shell=True)
+        print('bitstream written')
+
+    def get_tty_usb_list(self, serial_id):
+        tty_list = os.listdir('/dev')
+        usb_list = []
+        for tty in tty_list:
+            if 'USB' in tty:
+                usb_list.append(tty)
+        return usb_list
+
+    def get_tty_usb(self, tty_usb_list, serial_id):
+        for tty in tty_usb_list:
+            try:
+                subprocess.check_output('udevadm info /dev/' + tty + ' | grep ' + serial_id.rstrip('A'), shell=True)
+            except subprocess.CalledProcessError:
+                pass
+            else:
+                return tty
+
+    def write_mac_addr(self, usb_tty, mac_addr):
+        ser = serial.Serial('/dev/' + usb_tty, 115200)
+        time.sleep(0.01)
+        print(hex(mac_addr))
+        mac = mac_addr.to_bytes(6, 'big')
+        print(mac)
+        ser.write(mac)
+        ser.close()
+        time.sleep(3)
+
+async def handle_read(reader, writer):
+    data = await reader.read(1024)
+    message = pickle.loads(data)
+    addr = writer.get_extra_info('peername')
+
+    req = message['req']
+    if req == 'program':
+        param = message['param']
+        device = param['device']
+        bitfile = param['bitfile']
+        fpga_writer = FPGAWriter(conf)
+        info = FPGAInfo(device)
+        serial_id = fpga_writer.get_serial_id(device)
+        info.serial_id = serial_id
+        fpga_writer.write_bitstream(device, serial_id, bitfile)
+
+        tty_usb_list = fpga_writer.get_tty_usb_list(serial_id)
+        usb_tty = fpga_writer.get_tty_usb(tty_usb_list, serial_id)
+        info.tty = usb_tty
+
+        mac = fpga_writer.get_mac(device)
+        fpga_writer.write_mac_addr(info.tty, mac)
+
+        writer.write('Success'.encode())
+        await writer.drain()
+        writer.close()
+
+conf = StreamingConf('cluster.yaml')
+rm_addr = conf.get_rm_address()
+rm_port = conf.get_rm_port()
+loop = asyncio.get_event_loop()
+coro = asyncio.start_server(handle_read, rm_addr, rm_port, loop=loop)
+server = loop.run_until_complete(coro)
+
+print('Serving on {}'.format(server.sockets[0].getsockname()))
+try:
+    loop.run_forever()
+except KeyboardInterrupt:
+    pass
+
+server.close()
+loop.run_until_complete(server.wait_closed())
+loop.close()
+

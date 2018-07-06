@@ -1,49 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
-import os
 import sys
 import pickle
-import asyncore
+import asyncio
 from StreamingConf import StreamingConf
 
 
-class Client(asyncore.dispatcher_with_send):
+async def connect_client(argv, jm_addr, jm_port, loop):
+    reader, writer = await asyncio.open_connection(jm_addr, jm_port, loop=loop)
+    command = argv[1]
+    if command == 'submit':
+        message = {'cmd': 'submit', 'job_file': argv[2], 'job_name': argv[3]}
+    elif command == 'prepare':
+        message = {'cmd': 'prepare', 'job_name': argv[2]}
+    elif command == 'run':
+        message = {'cmd': 'run', 'job_name': argv[2]}
+    elif command == 'pause':
+        message = {'cmd': 'pause', 'job_name': argv[2]}
+    elif command == 'cancel':
+        message = {'cmd': 'cancel', 'job_name': argv[2]}
+    else:
+        return
+    writer.write(pickle.dumps(message))
 
-    def __init__(self, argv):
-        asyncore.dispatcher_with_send.__init__(self)
-        self.create_socket()
-        self.argv = argv
+    data = await reader.read(1024)
+    message = data.decode()
+    print(message)
 
+    writer.close()
 
-    def handle_write(self):
-        command = self.argv[1]
-        if command == 'submit':
-            message = {'cmd': 'submit', 'job_file': self.argv[2], 'job_name': self.argv[3]}
-        elif command == 'prepare':
-            message = {'cmd': 'prepare', 'job_name': self.argv[2]}
-        elif command == 'run':
-            message = {'cmd': 'run', 'job_name': self.argv[2]}
-        elif command == 'pause':
-            message = {'cmd': 'pause', 'job_name': self.argv[2]}
-        elif command == 'cancel':
-            message = {'cmd': 'cancel', 'job_name': self.argv[2]}
-        else:
-            return
-        self.send(pickle.dumps(message))
-        self.close()
-
-
-    def handle_close(self):
-        sys.exit(0)
-
-
-if __name__ == '__main__':
-    home = os.environ['MYSTR_HOME']
-    conf = StreamingConf('cluster.yaml')
-    jm_address = conf.get_jm_address()
-    jm_port = conf.get_jm_port()
-    client = Client(sys.argv)
-    client.connect((jm_address, jm_port))
-    asyncore.loop()
+conf = StreamingConf('cluster.yaml')
+jm_addr = conf.get_jm_address()
+jm_port = conf.get_jm_port()
+loop = asyncio.get_event_loop()
+loop.run_until_complete(connect_client(sys.argv, jm_addr, jm_port, loop))

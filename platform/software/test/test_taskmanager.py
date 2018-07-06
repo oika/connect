@@ -3,7 +3,7 @@
 from TaskManager import TaskManager
 from multiprocessing import Process
 from Stream import *
-#import asyncore
+import logging
 import unittest
 import multiprocessing
 
@@ -11,8 +11,10 @@ import multiprocessing
 class TestTaskManager(unittest.TestCase):
 
     def setUp(self):
+        logging.basicConfig(filename='TaskManager.log', level=logging.DEBUG)
+        logger = logging.getLogger(__name__)
         self.hostname = 'sv0'
-        self.tm = TaskManager(self.hostname)
+        self.tm = TaskManager(self.hostname, logger)
         self.tm.set_network()
         self.tm.addr = '127.0.0.1'
         self.tm.port = 5440
@@ -20,7 +22,7 @@ class TestTaskManager(unittest.TestCase):
         #self.tm.start_network()
 
     def tearDown(self):
-        self.tm.close()
+        #self.tm.close()
         del self.tm
 
     def __get_ops(self):
