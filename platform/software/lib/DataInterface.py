@@ -4,25 +4,29 @@
 class DataInterface:
 
     def __init__(self, mac_addr, ip_addr, port):
-        self.mac_addr = mac_addr
-        self.ip_addr = ip_addr
-        self.port = port
-        self.available = True
+        self.__mac_addr = mac_addr
+        self.__ip_addr = ip_addr
+        self.__port = port
+        self.__available = True
 
-    def get_ip_addr(self):
-        return self.ip_addr
+    @property
+    def ip_addr(self):
+        return self.__ip_addr
 
-    def get_mac_addr(self):
-        return self.mac_addr
+    @property
+    def mac_addr(self):
+        return self.__mac_addr
 
-    def get_port(self):
-        return self.port
+    @property
+    def port(self):
+        return self.__port
 
+    @property
     def is_available(self):
-        return self.available
+        return self.__available
 
     def reserve(self):
-        self.available = False
+        self.__available = False
 
     def release(self):
-        self.available = True
+        self.__available = True
