@@ -8,9 +8,9 @@ class TestJobManagerInfo(unittest.TestCase):
 
     def test_get_properties(self):
         info = JobManagerInfo("00:00:00:00:00:00", "127.0.0.1", 12345)
-        assert info.mac_addr is "00:00:00:00:00:00"
-        assert info.ip_addr is "127.0.0.1"
-        assert info.port is 12345
+        self.assertEqual(info.mac_addr, "00:00:00:00:00:00")
+        self.assertEqual(info.ip_addr, "127.0.0.1")
+        self.assertEqual(info.port, 12345)
 
     def test_cannot_set_mac_addr(self):
         with self.assertRaises(AttributeError):
