@@ -36,7 +36,6 @@ class ReceiveOperator(OperatorInterface, BaseOperator):
         f.close()
 
     def run(self):
-        print('here')
         event = struct.unpack('<Q', self.in_streams[0].get())
         f = open(self.file_name, 'a')
         f.write(str(event) + '\n')
