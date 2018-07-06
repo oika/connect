@@ -11,10 +11,7 @@ class StreamingConf:
         f = open(home_dir + '/conf/' + conf_file, 'r')
         self.conf = yaml.load(f)
         f.close()
-    
-    #def get_job_manager(self):
-    #    return self.conf['job_manager']
-    
+
     def get_jm_address(self):
         return self.conf['job_manager']['address']
 
