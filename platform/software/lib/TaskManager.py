@@ -13,33 +13,27 @@ import multiprocessing
 
 class TaskManager:
 
-    def __init__(self, hostname, logger):
+    def __init__(self, hostname, logger, address=None, port=None):
         self.logger = logger
         self.info = self.__get_task_manager_info(hostname)
         self.jobs = {}
         self.processes = {}
-        self.__addr = None
-        self.__port = None
-
-    def set_network(self):
-        self.__addr = self.info.manager_address
-        self.__port = self.info.manager_port
+        if address == None:
+            self.__addr = self.info.manager_address
+        else:
+            self.__addr = address
+        if port == None:
+            self.__port = self.info.manager_port
+        else:
+            self.__port = port
 
     @property
     def addr(self):
         return self.__addr
 
-    @addr.setter
-    def addr(self, addr):
-        self.__addr = addr
-
     @property
     def port(self):
         return self.__port
-
-    @port.setter
-    def port(self, port):
-        self.__port = port
 
     def __get_task_manager_info(self, name):
         conf = StreamingConf('cluster.yaml')

@@ -14,15 +14,10 @@ class TestTaskManager(unittest.TestCase):
         logging.basicConfig(filename='TaskManager.log', level=logging.DEBUG)
         logger = logging.getLogger(__name__)
         self.hostname = 'sv0'
-        self.tm = TaskManager(self.hostname, logger)
-        self.tm.set_network()
-        self.tm.addr = '127.0.0.1'
-        self.tm.port = 5440
+        self.tm = TaskManager(self.hostname, logger, address='127.0.0.1', port=5440)
         self.job_name = 'tm_test'
-        #self.tm.start_network()
 
     def tearDown(self):
-        #self.tm.close()
         del self.tm
 
     def __get_ops(self):
