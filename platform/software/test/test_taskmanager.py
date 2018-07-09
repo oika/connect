@@ -21,7 +21,7 @@ class TestTaskManager(unittest.TestCase):
         del self.tm
 
     def __get_ops(self):
-        tlgs = self.tm.jobs[self.job_name].dlgs[self.hostname].tlgs
+        tlgs = self.tm.jobs[self.job_name].get_device_local_group(self.hostname).tlgs
         ops = {}
         for tlg in tlgs:
             for op in tlg.operators:

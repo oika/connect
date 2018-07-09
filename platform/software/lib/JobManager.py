@@ -34,12 +34,12 @@ class JobManager:
         self.jobs[job_name] = job
 
         nw_interfaces = {}
-        for tm_name, dlg in job.dlgs.items():
+        for dlg in job.device_local_groups:
             for tlg in dlg.tlgs:
                 for op in tlg.operators:
                     for suc in job.df.successors(op):
                         if not dlg.has_operator(suc):
-                            for d in job.dlgs.values():
+                            for d in job.device_local_groups:
                                 if d.has_operator(suc):
                                     edge = (op, suc)
                                     indices = job.df.interfaces[edge]
@@ -51,19 +51,19 @@ class JobManager:
                                         nw_interfaces[interface] = (data_addr, data_port, data_mac)
                     for pre in job.df.predecessors(op):
                         if not dlg.has_operator(pre):
-                            for d in job.dlgs.values():
+                            for d in job.device_local_groups:
                                 if d.has_operator(pre):
                                     edge = (pre, op)
                                     indices = job.df.interfaces[edge]
                                     interface = (op.name, indices[0])
                                     if not nw_interfaces.get(interface):
                                         data_mac, data_addr, data_port = self.cluster_info\
-                                                .task_manager_infos[tm_name]\
+                                                .task_manager_infos[d.tm_name]\
                                                 .reserve_data_interface()
                                         nw_interfaces[interface] = (data_addr, data_port, data_mac)
 
         # distribute tasks
-        for dlg in job.dlgs.values():
+        for dlg in job.device_local_groups:
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
             if dlg.device_type == 'CPU':
@@ -112,7 +112,7 @@ class JobManager:
 
     def prepare_job(self, job_name):
         self.logger.info("Preparing job {}.".format(job_name))
-        for dlg in self.jobs[job_name].dlgs.values():
+        for dlg in self.jobs[job_name].device_local_groups:
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
             if dlg.device_type is not 'FPGA':
@@ -124,7 +124,7 @@ class JobManager:
 
     def run_job(self, job_name):
         self.logger.info("Running job {}.".format(job_name))
-        for dlg in self.jobs[job_name].dlgs.values():
+        for dlg in self.jobs[job_name].device_local_groups:
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
             if dlg.device_type is not 'FPGA':
@@ -136,7 +136,7 @@ class JobManager:
 
     def pause_job(self, job_name):
         self.logger.info("Pausing job {}.".format(job_name))
-        for dlg in self.jobs[job_name].dlgs.values():
+        for dlg in self.jobs[job_name].device_local_groups:
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
             if dlg.device_type is not 'FPGA':
@@ -148,7 +148,7 @@ class JobManager:
 
     def cancel_job(self, job_name):
         self.logger.info("Cancelling job {}.".format(job_name))
-        for dlg in self.jobs[job_name].dlgs.values():
+        for dlg in self.jobs[job_name].device_local_groups:
             tm_addr = self.cluster_info.task_manager_infos[dlg.tm_name].manager_address
             tm_port = self.cluster_info.task_manager_infos[dlg.tm_name].manager_port
             if dlg.device_type is not 'FPGA':
