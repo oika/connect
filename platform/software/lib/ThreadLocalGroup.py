@@ -4,4 +4,8 @@
 class ThreadLocalGroup:
 
     def __init__(self, *operators):
-        self.operators = list(operators)
+        self.__operators = tuple(operators)
+
+    @property
+    def operators(self):
+        return self.__operators
