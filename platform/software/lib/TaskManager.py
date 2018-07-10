@@ -117,7 +117,7 @@ class TaskManager:
                         self.__attach_rx_stream(pre, op, df, nw_interfaces)
 
     def prepare_tasks(self, job_name):
-        tlgs = self.jobs[job_name].dlgs[self.info.name].tlgs
+        tlgs = self.jobs[job_name].get_device_local_group(self.info.name).tlgs
         for tlg in tlgs:
             for op in tlg.operators:
                 op.prepare()
