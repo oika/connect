@@ -110,7 +110,7 @@ class TaskManager:
                 for suc in df.successors(op):
                     if dlg.has_operator(suc):
                         self.__attach_internal_stream(op, suc, df)
-                    elif not dlg.has_operator(suc):
+                    else:
                         self.__attach_tx_stream(op, suc, df, nw_interfaces)
                 for pre in df.predecessors(op):
                     if not dlg.has_operator(pre):
